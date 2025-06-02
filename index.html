@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>홈 | 괴담지옥</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div style="display: flex; align-items: center;">
+        <div id="menuContainer"></div>
+        <a href="index.html" class="logo">괴담지옥</a>
+        <nav>
+          <ul class="gnb">
+            <li><a href="index.html">홈</a></li>
+            <li id="urbanMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="urban.html">괴담</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="urban.html?filter=all">전체 괴담 모음</a>
+                <a href="urban.html?filter=korea">한국 괴담</a>
+                <a href="urban.html?filter=foreign">해외 괴담</a>
+                <a href="urban.html?filter=true">실화 이야기</a>
+                <a href="urban.html?filter=user">사용자 제보 괴담</a>
+              </div>
+            </li>
+            <li id="communityMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="community.html">커뮤니티</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="community.html?board=free">자유게시판</a>
+                <a href="community.html?board=notice">이벤트/공지</a>
+                <a href="community.html?board=archive">자료실</a>
+              </div>
+            </li>
+            <li id="aboutMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="about.html">정보</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="about.html?page=intro">사이트 소개</a>
+                <a href="about.html?page=greeting">운영자 인사말</a>
+                <a href="about.html?page=contact">문의/제보하기</a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+  <section class="main-section">
+    <h2 class="slider-title">인기 괴담</h2>
+    <div class="slider-area">
+      <div class="slider-arrow" id="sliderPrev">&lt;</div>
+      <div class="product-slider-wrapper">
+        <div class="product-slider" id="homeSlider">
+          <!-- JS로 카드 삽입 -->
+        </div>
+      </div>
+      <div class="slider-arrow" id="sliderNext">&gt;</div>
+    </div>
+  </section>
+</main>
+
+  <footer>
+    &copy; 2025 괴담지옥. All rights reserved.
+  </footer>
+</body>
+</html>
