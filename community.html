@@ -68,9 +68,19 @@
           <button class="sort-btn" data-sort="popular">인기순</button>
         </div>
       </div>
-      <div class="community-list" id="communityList">
-        <!-- 게시글 목록/상세가 JS로 렌더링됩니다 -->
+      <div id="writeSection" style="display:none; margin-bottom:2rem;">
+        <form id="writeForm">
+          <input type="text" id="writeTitle" placeholder="제목" required style="width:99%;margin-bottom:0.5rem;"/>
+          <textarea id="writeBody" placeholder="내용" required style="width:99%;height:80px;"></textarea>
+          <select id="writeBoard" style="margin-bottom:0.5rem;">
+            <option value="free">자유게시판</option>
+            <option value="notice">이벤트/공지</option>
+            <option value="archive">자료실</option>
+          </select>
+          <button type="submit" style="background:#e01c1c;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;">작성</button>
+        </form>
       </div>
+      <div class="community-list" id="communityList"></div>
       <div id="commentSection" style="margin-top:2.5rem; display:none;">
         <div style="font-size:1.2rem; font-weight:bold; margin-bottom:0.8rem;">댓글</div>
         <ul id="commentList" style="padding-left:0; list-style:none;"></ul>
