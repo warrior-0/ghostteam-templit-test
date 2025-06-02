@@ -268,3 +268,47 @@ window.writeUrbanComment = async function(e, urbanId) {
   window.renderUrbanComments(urbanId);
   document.getElementById('urbanCommentInput').value = '';
 };
+
+// 댓글 불러오기
+async function loadComments(postId) {
+  const commentsRef = collection(db, "comments");
+  const q = query(commentsRef, where("postId", "==", String(postId)), orderBy("timestamp", "asc"));
+  const snapshot = await getDocs(q);
+  const list = document.getElementById("commentList");
+  list.innerHTML = "";
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${data.authorname||"익명"}</strong>: ${data.comment}`;
+    // ... 수정/삭제 버튼 등 ...
+    list.appendChild(li);
+  });
+}
+window.loadComments = loadComments;
+
+// 댓글 작성
+async function submitComment(event, postId) {
+  event.preventDefault();
+  if (!currentUser) {
+    alert("로그인 후 댓글 작성 가능합니다.");
+    return;
+  }
+
+  const comment = document.getElementById("comment").value.trim();
+  if (!comment) {
+    alert("댓글을 입력해주세요.");
+    return;
+  }
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  const nickname = userDoc.exists() ? userDoc.data().nickname : "익명";
+  await addDoc(collection(db, "comments"), {
+    postId: String(postId),
+    comment,
+    authorname: nickname,
+    uid: currentUser.uid,
+    timestamp: new Date()
+  });
+  document.getElementById("comment").value = "";
+  loadComments(postId);
+}
+window.submitComment = submitComment;
