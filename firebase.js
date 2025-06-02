@@ -84,33 +84,25 @@ onAuthStateChanged(auth, user => {
       }
     });
 
-    // 회원가입
-    async function signUp() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const nickname = document.getElementById("nickname").value.trim();
-
-  if (!nickname) {
-    alert("닉네임을 입력해주세요.");
-    return;
-  }
-
+// 회원가입 함수(닉네임 포함)
+async function signUpWithFirebase(email, password, nickname) {
+  if (!nickname) throw new Error("닉네임을 입력해주세요.");
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-
-    // Firestore에 닉네임 저장
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       nickname: nickname,
     });
-
     alert("회원가입 완료! 로그인되었습니다.");
+    // 바로 로그인 처리 후 홈으로 이동
+    window.location.href = "index.html";
   } catch (error) {
-    alert("회원가입 오류: " + error.message);
+    throw error;
   }
 }
-
+// 전역 내보내기
+window.signUpWithFirebase = signUpWithFirebase;
 
 // 로그인
 async function signInWithFirebase(email, password) {
