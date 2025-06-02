@@ -121,6 +121,24 @@ function renderCommunityDetail(id) {
   document.querySelector('.community-back-btn').addEventListener('click', function(){
     window.history.back();
   });
+    // ... 기존 게시글 상세 코드 ...
+  communityList.innerHTML = `...`; // 기존 상세보기 html
+
+  // 댓글 영역 보이기
+  const commentSection = document.getElementById('commentSection');
+  if (commentSection) commentSection.style.display = "block";
+
+  // 댓글 불러오기 (firebase.js 함수 사용)
+  if (window.loadComments) window.loadComments(id);
+
+  // 댓글 작성 이벤트 연결
+  const commentForm = document.getElementById('commentForm');
+  if (commentForm) {
+    commentForm.onsubmit = function(e){
+      e.preventDefault();
+      if (window.submitComment) window.submitComment(e, id);
+    };
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
