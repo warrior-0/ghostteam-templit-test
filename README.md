@@ -1,1 +1,0 @@
-# ghostteam-templit-test
