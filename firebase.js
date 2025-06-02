@@ -245,6 +245,7 @@ window.renderUrbanLikes = async function (urbanId) {
   };
 };
 
+
 // urban(괴담) 댓글
 window.renderUrbanComments = async function(urbanId) {
   const commentsRef = collection(db, "urban_comments");
