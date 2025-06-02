@@ -34,7 +34,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
+export {
+  db, auth,
+  collection, addDoc, getDocs, query, where, orderBy, doc, setDoc, getDoc, deleteDoc,
+  onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut
+};
 
 // 로그인/로그아웃 버튼 렌더링 (모든 페이지에서 작동)
 function renderAuthUI(user) {
