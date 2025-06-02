@@ -83,17 +83,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 
 
 // 로그인
-async function signIn() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+async function signInWithFirebase(email, password) {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     localStorage.setItem('loggedIn', 'true');
     alert("로그인 성공!");
+    // 이전 페이지로 이동
     const prev = localStorage.getItem('prevPage') || 'index.html';
     window.location.href = prev;
   } catch (error) {
     alert("로그인 오류: " + error.message);
+    throw error;
   }
 }
 // 전역에서 사용할 수 있게
@@ -348,18 +348,3 @@ let selectedRating = 0;
       document.getElementById("commentForm").addEventListener("submit", submitComment);
       document.getElementById("ratingSubmit").onclick = submitRating;
     };
-// ... (생략된 기존 코드)
-
-async function signInWithFirebase(email, password) {
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    localStorage.setItem('loggedIn', 'true');
-    alert("로그인 성공!");
-    // 이전 페이지로 이동
-    const prev = localStorage.getItem('prevPage') || 'index.html';
-    window.location.href = prev;
-  } catch (error) {
-    alert("로그인 오류: " + error.message);
-    throw error;
-  }
-}
