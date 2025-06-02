@@ -186,4 +186,42 @@ if (!document.getElementById('bgmAudio')) {
       updateState(isPlaying);
     });
   }
+  function renderAuthButton() {
+  const bgmToggleContainer = document.getElementById('bgmToggleContainer');
+  if (!bgmToggleContainer) return;
+
+  // 이미 버튼이 있으면 제거
+  let existing = document.getElementById('authBtn');
+  if (existing) existing.remove();
+
+  const authBtn = document.createElement('button');
+  authBtn.id = 'authBtn';
+  authBtn.style.marginLeft = '0.7rem';
+  authBtn.style.background = '#222';
+  authBtn.style.color = '#fafafa';
+  authBtn.style.border = 'none';
+  authBtn.style.padding = '0.4rem 1rem';
+  authBtn.style.borderRadius = '20px';
+  authBtn.style.fontSize = '0.95rem';
+  authBtn.style.cursor = 'pointer';
+
+  if (localStorage.getItem('loggedIn') === 'true') {
+    authBtn.textContent = '로그아웃';
+    authBtn.onclick = function() {
+      localStorage.removeItem('loggedIn');
+      // firebase 로그아웃도 실행(동일한 기능이면 firebase.js의 signOutUser 함수 활용)
+      if (window.signOutUser) window.signOutUser();
+      else location.reload();
+    };
+  } else {
+    authBtn.textContent = '로그인';
+    authBtn.onclick = function() {
+      localStorage.setItem('prevPage', window.location.href);
+      window.location.href = 'login.html';
+    };
+  }
+
+  bgmToggleContainer.appendChild(authBtn);
+}
+
 });
