@@ -4,68 +4,86 @@
   <meta charset="UTF-8" />
   <title>커뮤니티 | 괴담지옥</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="main.js" defer></script>
   <script src="firebase.js" type="module"></script>
+  <script src="main.js" defer></script>
+  <script src="community.js" defer></script>
 </head>
 <body>
   <header>
     <div class="header-inner">
-      <a href="index.html" class="logo">괴담지옥</a>
-      <nav>
-        <ul class="gnb">
-          <li><a href="index.html">홈</a></li>
-          <li id="urbanMenu">
-            <div class="dropdown" tabindex="0">
-              <a href="urban.html">괴담</a>
-              <span class="dropdown-arrow">&#9660;</span>
-            </div>
-            <div class="submenu">
-              <a href="urban.html?filter=all">전체 괴담 모음</a>
-              <a href="urban.html?filter=korea">한국 괴담</a>
-              <a href="urban.html?filter=foreign">해외 괴담</a>
-              <a href="urban.html?filter=true">실화 이야기</a>
-              <a href="urban.html?filter=user">사용자 제보 괴담</a>
-            </div>
-          </li>
-          <li id="communityMenu">
-            <div class="dropdown" tabindex="0">
-              <a href="community.html">커뮤니티</a>
-              <span class="dropdown-arrow">&#9660;</span>
-            </div>
-            <div class="submenu">
-              <a href="community.html?board=free">자유게시판</a>
-              <a href="community.html?board=notice">이벤트/공지</a>
-              <a href="community.html?board=archive">자료실</a>
-            </div>
-          </li>
-          <li id="aboutMenu">
-            <div class="dropdown" tabindex="0">
-              <a href="about.html">정보</a>
-              <span class="dropdown-arrow">&#9660;</span>
-            </div>
-            <div class="submenu">
-              <a href="about.html?page=intro">사이트 소개</a>
-              <a href="about.html?page=greeting">운영자 인사말</a>
-              <a href="about.html?page=contact">문의/제보하기</a>
-            </div>
-          </li>
-        </ul>
-      </nav>
-      <div id="authControl" style="margin-left:auto"></div>
+      <div style="display: flex; align-items: center;">
+        <div id="menuContainer"></div>
+        <a href="index.html" class="logo">괴담지옥</a>
+        <nav>
+          <ul class="gnb">
+            <li><a href="index.html">홈</a></li>
+            <li id="urbanMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="urban.html">괴담</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="urban.html?filter=all">전체 괴담 모음</a>
+                <a href="urban.html?filter=korea">한국 괴담</a>
+                <a href="urban.html?filter=foreign">해외 괴담</a>
+                <a href="urban.html?filter=true">실화 이야기</a>
+                <a href="urban.html?filter=user">사용자 제보 괴담</a>
+              </div>
+            </li>
+            <li id="communityMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="community.html">커뮤니티</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="community.html?board=free">자유게시판</a>
+                <a href="community.html?board=notice">이벤트/공지</a>
+                <a href="community.html?board=archive">자료실</a>
+              </div>
+            </li>
+            <li id="aboutMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="about.html">정보</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="about.html?page=intro">사이트 소개</a>
+                <a href="about.html?page=greeting">운영자 인사말</a>
+                <a href="about.html?page=contact">문의/제보하기</a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <div id="authControl" style="margin-left:auto"></div>
+      </div>
     </div>
   </header>
-  
+
   <main>
-    <section style="max-width: 700px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
-      <button onclick="window.writePost()">글 작성</button>
-      <ul id="postList"></ul>
+    <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
+      <div class="community-header">
+        <div class="community-title">자유게시판</div>
+        <div class="community-sort">
+          <button class="sort-btn active" data-sort="latest">최신순</button>
+          <button class="sort-btn" data-sort="popular">인기순</button>
+        </div>
+      </div>
+      <div class="community-list" id="communityList">
+        <!-- 게시글 목록/상세가 JS로 렌더링됩니다 -->
+      </div>
+      <div id="commentSection" style="margin-top:2.5rem; display:none;">
+        <div style="font-size:1.2rem; font-weight:bold; margin-bottom:0.8rem;">댓글</div>
+        <ul id="commentList" style="padding-left:0; list-style:none;"></ul>
+        <form id="commentForm" style="margin-top:1rem; display:flex; gap:0.7rem;">
+          <input id="comment" type="text" placeholder="댓글을 입력하세요" style="flex:1; padding:0.5rem; border-radius:6px; border:none;"/>
+          <button type="submit" style="background:#e01c1c;color:#fff;border:none;border-radius:7px;padding:0.5rem 1.3rem;cursor:pointer;">작성</button>
+        </form>
+      </div>
     </section>
   </main>
-  <footer>&copy; 2025 괴담지옥. All rights reserved.</footer>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      window.loadPosts();
-    });
-  </script>
+
+  <footer>
+    &copy; 2025 괴담지옥. All rights reserved.
+  </footer>
 </body>
 </html>
