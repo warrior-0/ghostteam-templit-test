@@ -36,7 +36,19 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
-
+function renderAuthUI(user) {
+  const authDiv = document.getElementById("authControl");
+  if (!authDiv) return;
+  authDiv.innerHTML = "";
+  const btn = document.createElement("button");
+  btn.textContent = user ? "로그아웃" : "로그인";
+  btn.onclick = user
+    ? () => signOut(auth)
+    : () => window.location.href = "login.html";
+  // 스타일 생략 가능
+  authDiv.appendChild(btn);
+}
+onAuthStateChanged(auth, renderAuthUI);
 // ===== 공통 로그인 UI & 상태 일원화 =====
 function renderAuthUI(user) {
   const authDiv = document.getElementById("authControl");
