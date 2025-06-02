@@ -2,18 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>로그인</title>
-  <script src="firebase.js" defer></script>
+  <title>로그인/회원가입 | 괴담지옥</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="firebase.js" type="module"></script>
+  <style>
+    .login-container { max-width:400px; margin:4rem auto; background:#222; padding:2rem 2.5rem; border-radius:16px; color:#fafafa; }
+    .tab-btn { display:inline-block; margin-right:8px; padding:0.4rem 1.2rem; background:#303030; border:none; border-radius:8px; color:#fafafa; cursor:pointer;font-size:1rem;}
+    .tab-btn.active { background:#e01c1c; }
+    .form-group { margin-bottom:1.1rem; }
+    label { display:block; margin-bottom:0.3rem; color:#ccc; }
+    input { width:100%; padding:0.6rem; border-radius:6px; border:none; font-size:1rem; }
+    .submit-btn { width:100%; background:#e01c1c; color:#fff; border:none; border-radius:8px; padding:0.7rem 0; font-size:1.1rem; cursor:pointer;}
+    .error-msg { color:#ff6666; margin-bottom:1rem; }
+  </style>
 </head>
 <body>
-  <h2>로그인</h2>
-  <input id="email" type="email" placeholder="이메일"><br>
-  <input id="password" type="password" placeholder="비밀번호"><br>
-  <button id="signInBtn">로그인</button>
-  <script>
-    document.getElementById('signInBtn').onclick = function() {
-      if (window.signIn) window.signIn();
-    }
-  </script>
-</body>
-</html>
+  <div class="login-container">
+    <div style="text-align:center; margin-bottom:2rem; font-size:1.7rem; font-weight:bold;">괴담지옥 로그인/회원가입</div>
+    <div style="margin-bottom:1.5rem; text-align:center;">
+      <button class="tab-btn active" id="loginTabBtn">로그인</button>
+      <button class="tab-btn" id="signupTabBtn">회원가입</button>
+    </div>
+    <div id="formArea">
+      <!-- 폼이 JS로 삽입됨 -->
+    </div>
+  </
