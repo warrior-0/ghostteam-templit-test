@@ -1,4 +1,5 @@
 // main.js: 드롭다운 메뉴, 홈 슬라이더, 로그인/회원가입 폼 삽입, BGM 버튼, 인증 버튼 처리
+
 document.addEventListener('DOMContentLoaded', function () {
   // ---------------------- 드롭다운 메뉴 ----------------------
   function setupDropdownMenus() {
@@ -147,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
     audioEl.innerHTML = `<source src="bgm.mp3" type="audio/mpeg">브라우저가 오디오를 지원하지 않습니다.`;
     document.body.appendChild(audioEl);
   }
+
   // 헤더 내부에 BGM 토글 버튼 삽입
   const headerInner = document.querySelector('.header-inner');
   if (headerInner && !document.getElementById('bgmToggleContainer')) {
@@ -259,3 +261,12 @@ document.addEventListener('DOMContentLoaded', function () {
         renderLoginForm();
       };
       signupTabBtn.onclick = function() {
+        signupTabBtn.classList.add("active");
+        loginTabBtn.classList.remove("active");
+        renderSignupForm();
+      };
+      // 최초 기본값: 로그인 폼
+      renderLoginForm();
+    }
+  }
+});
