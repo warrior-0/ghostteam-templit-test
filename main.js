@@ -147,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
     audioEl.innerHTML = `<source src="bgm.mp3" type="audio/mpeg">브라우저가 오디오를 지원하지 않습니다.`;
     document.body.appendChild(audioEl);
   }
-
   // 헤더 내부에 BGM 토글 버튼 삽입
   const headerInner = document.querySelector('.header-inner');
   if (headerInner && !document.getElementById('bgmToggleContainer')) {
