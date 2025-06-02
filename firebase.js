@@ -82,20 +82,31 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 }
 
 
-    // 로그인
+// 로그인
 async function signIn() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
-  await signInWithFirebase(email, password);
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    localStorage.setItem('loggedIn', 'true');
+    alert("로그인 성공!");
+    const prev = localStorage.getItem('prevPage') || 'index.html';
+    window.location.href = prev;
+  } catch (error) {
+    alert("로그인 오류: " + error.message);
+  }
 }
 // 전역에서 사용할 수 있게
 window.signInWithFirebase = signInWithFirebase;
+// 로그아웃 함수도 전역으로 노출(메인에서 window.signOutUser로 호출 가능)
+window.signOutUser = async function() {
+  await signOut(auth);
+  localStorage.removeItem('loggedIn');
+  alert("로그아웃 되었습니다.");
+  location.reload();
+};
 
-    // 로그아웃
-    async function signOutUser() {
-      await signOut(auth);
-      alert("로그아웃 되었습니다.");
-    }
+
 
     // 게시글 불러오기
     async function loadPosts() {
