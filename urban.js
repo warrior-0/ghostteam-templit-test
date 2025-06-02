@@ -170,6 +170,7 @@ function renderUrbanDetail(id) {
   });
 }
 
+
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('urbanList')) {
     let sortType = 'latest';
