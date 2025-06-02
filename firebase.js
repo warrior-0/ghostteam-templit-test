@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";More actions
 import {
   getAuth,
   onAuthStateChanged,
@@ -33,6 +33,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+export { db, auth };
 
 let currentUser = null;
 
@@ -368,5 +370,5 @@ let selectedRating = 0;
 
       document.getElementById("postCreateBtn").onclick = createPost;
       document.getElementById("commentForm").addEventListener("submit", submitComment);
-      document.getElementById("ratingSubmit").onclick = submitRating;
+      document.getElementById("ratingSubmit").onclick = submitRating;More actions
     };
