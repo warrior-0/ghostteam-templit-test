@@ -1,5 +1,4 @@
 // main.js: 드롭다운 메뉴, 홈 슬라이더, 로그인/회원가입 폼 삽입, BGM 버튼, 인증 버튼 처리
-
 document.addEventListener('DOMContentLoaded', function () {
   // ---------------------- 드롭다운 메뉴 ----------------------
   function setupDropdownMenus() {
