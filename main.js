@@ -261,12 +261,3 @@ document.addEventListener('DOMContentLoaded', function () {
         renderLoginForm();
       };
       signupTabBtn.onclick = function() {
-        signupTabBtn.classList.add("active");
-        loginTabBtn.classList.remove("active");
-        renderSignupForm();
-      };
-      // 최초 기본값: 로그인 폼
-      renderLoginForm();
-    }
-  }
-});
