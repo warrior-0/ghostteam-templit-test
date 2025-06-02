@@ -4,8 +4,9 @@
   <meta charset="UTF-8" />
   <title>홈 | 괴담지옥</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="main.js" defer></script>
+  <!-- Firebase Auth 버튼 렌더링을 위해 firebase.js를 import (type="module" 필수) -->
   <script src="firebase.js" type="module"></script>
+  <script src="main.js" defer></script>
 </head>
 <body>
   <header>
@@ -53,6 +54,7 @@
             </li>
           </ul>
         </nav>
+        <!-- 로그인/로그아웃 버튼이 렌더링될 영역 추가 -->
         <div id="authControl" style="margin-left:auto"></div>
       </div>
     </div>
