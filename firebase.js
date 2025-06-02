@@ -129,7 +129,6 @@ window.signOutUser = async function() {
 };
 
 
-
     // 게시글 불러오기
     async function loadPosts() {
       const postsRef = collection(db, "posts");
