@@ -1,3 +1,5 @@
+window.firebaseConfig = firebaseConfig; // community.js에서 사용
+// Firestore 인스턴스와 로그인 유저를 window.firebaseApp에 등록
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth,
@@ -18,9 +20,16 @@ import {
   setDoc,
   getDoc,
   deleteDoc,
-  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+window.firebaseApp = { firestore: db, currentUser: null };
+onAuthStateChanged(auth, user => {
+  window.firebaseApp.currentUser = user;
+  renderAuthUI(user);
+});
 const firebaseConfig = {
   apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
   authDomain: "ghost-38f07.firebaseapp.com",
