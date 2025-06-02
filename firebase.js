@@ -259,5 +259,4 @@ async function createPost() {
     alert("댓글을 입력해주세요.");
     return;
   }
-
   const userDoc = await getDoc(doc(db, "users", currentUser.uid));
