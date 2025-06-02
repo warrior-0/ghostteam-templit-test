@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
       level: 3,
       thumb: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
       body: '어두운 밤, 골목길을 걷다가 누군가 따라오는 듯한 기분에 뒤를 돌아봤지만 아무도 없었다. 하지만 발소리는 점점 가까워졌다...',
-      detail: '이 이야기는 실제로 2021년 서울의 한 골목에서 벌어진 일입니다. 집에 가던 중, 뒤에서 발소리가 가까워지는 것을 느꼈지만 주위를 둘러봐도 [...]'
+      detail: '이 이야기는 실제로 2021년 서울의 한 골목에서 벌어진 일입니다. 집에 가던 중, 뒤에서 발소리가 가까워지는 것을 느꼈지만 주위를 둘러봐��[...]'
     },
     {
       id: 2,
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
       level: 4,
       thumb: 'https://images.unsplash.com/photo-1465101178521-c1a9136a3f41?auto=format&fit=crop&w=400&q=80',
       body: '엘리베이터에 홀로 타고 있는데, 누군가 버튼을 누른 것도 아닌데 갑자기 13층에 멈췄다. 문이 열리고 아무도 없었다...',
-      detail: '엘리베이터를 타고 가던 중, 목적지와는 전혀 상관없는 13층에서 멈췄고, 문이 열렸지만 아무도 없었습니다. 괜히 오싹해서 바로 닫힘 버튼을 [...]'
+      detail: '엘리베이터를 타고 가던 중, 목적지와는 전혀 상관없는 13층에서 멈췄고, 문이 열렸지만 아무도 없었습니다. 괜히 오싹해서 바로 닫힘 버튼�[...]'
     },
     {
       id: 4,
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
       level: 1,
       thumb: 'https://images.unsplash.com/photo-1510936111840-6cef99faf2a9?auto=format&fit=crop&w=400&q=80',
       body: '이 괴담은 사용자에게 제보받은 내용입니다...',
-      detail: '사용자 제보에 따르면, 한밤중에 집에서 혼자 있는데 누군가 문을 두드리는 소리가 들렸다고 합니다. 하지만 확인해보니 아무도 없었다고 합니다.'
+      detail: '사용자 제보에 따르면, 한밤중에 집에서 혼자 있는데 누군가 문을 두드리는 소리가 들렸다고 합니다. 하지만 확인해보니 아무도 없었다고 �[...]'
     }
   ];
 
@@ -109,11 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
     `).join('');
 
     document.querySelectorAll('.product-card').forEach(card => {
-  card.addEventListener('click', function () {
-    const id = this.getAttribute('data-id');
-    window.location.href = `urban.html?id=${id}`;
+      card.addEventListener('click', function () {
+        const id = this.getAttribute('data-id');
+        window.location.href = `urban.html?id=${id}`;
+      });
     });
-  });
 
     let idx = 0;
     const visible = 2.3;
@@ -138,8 +138,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     updateSlider(); // 초기 위치 설정
-    }
-if (!document.getElementById('bgmAudio')) {
+  }
+  if (!document.getElementById('bgmAudio')) {
     const audioEl = document.createElement('audio');
     audioEl.id = 'bgmAudio';
     audioEl.loop = true;
@@ -185,5 +185,61 @@ if (!document.getElementById('bgmAudio')) {
       isPlaying = !isPlaying;
       updateState(isPlaying);
     });
+  }
+
+
+  // 로그인/로그아웃 버튼 동적 렌더링
+  // 각 페이지 헤더에 <div id="authControl" style="margin-left:auto"></div> 필요
+  // firebase.js가 type="module"로 반드시 로드되어 있어야 함
+  if (!window.authUiInjected) {
+    window.authUiInjected = true;
+    // 동적으로 firebase.js가 이미 모듈로 로드되었다고 가정
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.innerHTML = `
+      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      const auth = getAuth();
+      function renderAuthUI(user) {
+        const authDiv = document.getElementById("authControl");
+        if (!authDiv) return;
+        authDiv.innerHTML = "";
+        const btn = document.createElement("button");
+        btn.style.background = "#222";
+        btn.style.color = "#fafafa";
+        btn.style.border = "none";
+        btn.style.padding = "0.4rem 1rem";
+        btn.style.borderRadius = "20px";
+        btn.style.fontSize = "0.95rem";
+        btn.style.cursor = "pointer";
+        btn.style.marginLeft = "1rem";
+        btn.style.transition = "background 0.2s";
+        if (user) {
+          btn.textContent = "로그아웃";
+          btn.onclick = async () => {
+            await signOut(auth);
+            localStorage.removeItem('loggedIn');
+            alert("로그아웃 되었습니다.");
+            location.reload();
+          };
+        } else {
+          btn.textContent = "로그인";
+          btn.onclick = () => {
+            localStorage.setItem('prevPage', location.pathname + location.search);
+            window.location.href = "login.html";
+          };
+        }
+        authDiv.appendChild(btn);
+      }
+      onAuthStateChanged(auth, user => {
+        renderAuthUI(user);
+        // 로그인된 상태에서 로그인페이지 들어가면 자동 리디렉트 (옵션)
+        if (window.location.pathname.endsWith("login.html") && user) {
+          const prev = localStorage.getItem('prevPage') || 'index.html';
+          window.location.href = prev;
+        }
+      });
+      window.renderAuthUI = renderAuthUI;
+    `;
+    document.body.appendChild(script);
   }
 });
