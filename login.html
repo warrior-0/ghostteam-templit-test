@@ -2,29 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>로그인 | 괴담지옥</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>로그인</title>
   <script src="firebase.js" defer></script>
-  <script src="auth.js" defer></script>
 </head>
 <body>
-  <div style="max-width:350px;margin:4rem auto;padding:2rem;background:#1a1a1a;border-radius:12px;">
-    <h2 style="margin-bottom:1.5rem;">로그인</h2>
-    <input id="email" type="email" placeholder="이메일" style="width:100%;margin-bottom:1rem;padding:0.7rem;border-radius:6px;border:none;" />
-    <input id="password" type="password" placeholder="비밀번호" style="width:100%;margin-bottom:1.5rem;padding:0.7rem;border-radius:6px;border:none;" />
-    <button id="loginPageBtn" style="width:100%;padding:0.8rem;background:#222;color:#fafafa;border:none;border-radius:8px;font-size:1.1rem;">로그인</button>
-    <div id="loginStatus" style="color:#ed4747;margin-top:1rem;"></div>
-  </div>
+  <h2>로그인</h2>
+  <input id="email" type="email" placeholder="이메일"><br>
+  <input id="password" type="password" placeholder="비밀번호"><br>
+  <button id="signInBtn">로그인</button>
   <script>
-    document.getElementById('loginPageBtn').onclick = async function() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      try {
-        await window.signInWithFirebase(email, password);
-      } catch (e) {
-        document.getElementById('loginStatus').innerText = '로그인 실패: ' + e.message;
-      }
-    };
+    document.getElementById('signInBtn').onclick = function() {
+      if (window.signIn) window.signIn();
+    }
   </script>
 </body>
 </html>
