@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <title>커뮤니티 | 괴담지옥</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="main.js" defer></script>
-  <script src="community.js" defer></script>
+  <script src="firebase.js" type="module"></script>
 </head>
 <body>
   <header>
@@ -30,7 +29,7 @@
               </div>
             </li>
             <li id="communityMenu">
-              <div class="dropdown" tabindex="0">
+              <div class="dropdown" tabindex="0" aria-haspopup="true" aria-label="커뮤니티 메뉴">
                 <a href="community.html">커뮤니티</a>
                 <span class="dropdown-arrow">&#9660;</span>
               </div>
@@ -53,10 +52,10 @@
             </li>
           </ul>
         </nav>
+        <div id="authControl" style="margin-left:auto"></div>
       </div>
     </div>
   </header>
-
   <main>
     <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
       <div class="community-header">
@@ -66,12 +65,16 @@
           <button class="sort-btn" data-sort="popular">인기순</button>
         </div>
       </div>
-      <div class="community-list" id="communityList">
-        <!-- 게시글 목록/상세가 JS로 렌더링됩니다 -->
+      <div class="community-list" id="communityList"></div>
+      <div id="postWriteSection" style="display:none; margin-top:2rem;">
+        <form id="postForm">
+          <input type="text" id="postTitle" placeholder="제목" maxlength="40" required aria-label="제목" />
+          <textarea id="postBody" placeholder="내용" required aria-label="내용"></textarea>
+          <button type="submit">글쓰기</button>
+        </form>
       </div>
     </section>
   </main>
-
   <footer>
     &copy; 2025 괴담지옥. All rights reserved.
   </footer>
