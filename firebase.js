@@ -19,6 +19,11 @@ import {
   setDoc,
   getDoc,
   deleteDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  increment,
+  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -79,7 +84,6 @@ onAuthStateChanged(auth, user => {
   renderAuthUI(user);
 });
 
-
 // 회원가입 함수(닉네임 포함)
 async function signUpWithFirebase(email, password, nickname) {
   if (!nickname) throw new Error("닉네임을 입력해주세요.");
@@ -112,5 +116,104 @@ window.signOutUser = async function() {
   location.reload();
 };
 
-// export Firestore, Auth, currentUser getter
+// ============= 게시글 CRUD ============= //
+
+// 글쓰기
+async function createPost({ title, content, authorUid, authorNickname }) {
+  const docRef = await addDoc(collection(db, "posts"), {
+    title,
+    content,
+    authorUid,
+    authorNickname,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    likes: [],
+    likeCount: 0
+  });
+  return docRef.id;
+}
+window.createPost = createPost;
+
+// 글 수정
+async function updatePost(postId, { title, content }) {
+  const postRef = doc(db, "posts", postId);
+  await updateDoc(postRef, {
+    title,
+    content,
+    updatedAt: serverTimestamp()
+  });
+}
+window.updatePost = updatePost;
+
+// 글 삭제
+async function deletePost(postId) {
+  const postRef = doc(db, "posts", postId);
+  // 댓글도 같이 삭제하기
+  const commentsSnap = await getDocs(query(collection(db, "comments"), where("postId", "==", postId)));
+  const batchDeletes = [];
+  commentsSnap.forEach(commentDoc => {
+    batchDeletes.push(deleteDoc(doc(db, "comments", commentDoc.id)));
+  });
+  await Promise.all(batchDeletes);
+  await deleteDoc(postRef);
+}
+window.deletePost = deletePost;
+
+// ============= 댓글 CRUD ============= //
+
+// 댓글 작성
+async function createComment({ postId, content, authorUid, authorNickname }) {
+  const docRef = await addDoc(collection(db, "comments"), {
+    postId,
+    content,
+    authorUid,
+    authorNickname,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  return docRef.id;
+}
+window.createComment = createComment;
+
+// 댓글 수정
+async function updateComment(commentId, { content }) {
+  const commentRef = doc(db, "comments", commentId);
+  await updateDoc(commentRef, {
+    content,
+    updatedAt: serverTimestamp()
+  });
+}
+window.updateComment = updateComment;
+
+// 댓글 삭제
+async function deleteComment(commentId) {
+  const commentRef = doc(db, "comments", commentId);
+  await deleteDoc(commentRef);
+}
+window.deleteComment = deleteComment;
+
+// ============= 좋아요 ============= //
+
+// 글 좋아요 토글
+async function toggleLike(postId, userUid) {
+  const postRef = doc(db, "posts", postId);
+  const postSnap = await getDoc(postRef);
+  if (!postSnap.exists()) throw new Error("게시글이 존재하지 않습니다.");
+  const post = postSnap.data();
+  const alreadyLiked = post.likes?.includes(userUid);
+  if (alreadyLiked) {
+    await updateDoc(postRef, {
+      likes: arrayRemove(userUid),
+      likeCount: increment(-1)
+    });
+  } else {
+    await updateDoc(postRef, {
+      likes: arrayUnion(userUid),
+      likeCount: increment(1)
+    });
+  }
+}
+window.toggleLike = toggleLike;
+
+// ============= export Firestore, Auth, currentUser getter ============= //
 export { db, auth, currentUser };
