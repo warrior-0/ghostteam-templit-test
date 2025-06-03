@@ -33,6 +33,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 let currentUser = null;
 
 // 로그인/로그아웃 버튼 렌더링 (모든 페이지에서 작동)
@@ -54,6 +55,7 @@ function renderAuthUI(user) {
     btn.textContent = "로그아웃";
     btn.onclick = async () => {
       await signOut(auth);
+      location.reload();
     };
   } else {
     btn.textContent = "로그인";
@@ -61,6 +63,13 @@ function renderAuthUI(user) {
   }
   authDiv.appendChild(btn);
 }
+
+// 1. 페이지가 로드되자마자 로그인 버튼 기본적으로 출력
+document.addEventListener("DOMContentLoaded", () => {
+  renderAuthUI(null);
+});
+
+// 2. 로그인 상태 변동시 다시 렌더
 onAuthStateChanged(auth, user => {
   currentUser = user;
   renderAuthUI(user);
