@@ -79,6 +79,7 @@ onAuthStateChanged(auth, user => {
   renderAuthUI(user);
 });
 
+
 // 회원가입 함수(닉네임 포함)
 async function signUpWithFirebase(email, password, nickname) {
   if (!nickname) throw new Error("닉네임을 입력해주세요.");
