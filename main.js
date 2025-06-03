@@ -1,4 +1,4 @@
-// ✅ main.js: 드롭다운 메뉴 + 홈 슬라이더More actions
+// ✅ main.js: 드롭다운 메뉴 + 홈 슬라이더
 
 document.addEventListener('DOMContentLoaded', function () {
   function setupDropdownMenus() {
@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
   setupDropdownMenus();
 
   // 홈 인기 괴담 슬라이더
-  // ......[생략]...... (기존 슬라이더 코드 유지)
   const urbanData = [
     {
       id: 1,
@@ -97,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   ];
 
-  // BGM 버튼 등 기존 코드 유지
   const slider = document.getElementById('homeSlider');
   if (slider) {
     const sorted = [...urbanData].sort((a, b) => b.likes - a.likes).slice(0, 5);
@@ -110,8 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
     `).join('');
 
-  // 로그인/로그아웃 버튼은 firebase.js에서 자동 렌더됨
-  // 모든 페이지 header에 <div id="authControl" style="margin-left:auto"></div>가 있어야 함
     document.querySelectorAll('.product-card').forEach(card => {
   card.addEventListener('click', function () {
     const id = this.getAttribute('data-id');
@@ -188,6 +184,6 @@ if (!document.getElementById('bgmAudio')) {
     bgmBtn.addEventListener('click', () => {
       isPlaying = !isPlaying;
       updateState(isPlaying);
-    });More actions
+    });
   }
 });
