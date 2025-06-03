@@ -64,29 +64,6 @@ const filterTitles = {
   user: '사용자 제보 괴담'
 };
 
-function renderUrbanDetail(id) {
-  const urbanList = document.getElementById('urbanList');
-  const data = urbanData.find(item => item.id == id);
-  if (!data) {
-    urbanList.innerHTML = `<div>괴담을 찾을 수 없습니다.</div>`;
-    return;
-  }
-  urbanList.innerHTML = `
-    <div>
-      <h3>${data.title}</h3>
-      <div>${data.detail || data.body}</div>
-      <div id="urbanLikes"></div>
-      <div id="urbanComments"></div>
-      <form id="urbanCommentForm"><input id="urbanCommentInput" placeholder="댓글"/><button>댓글달기</button></form>
-      <button onclick="window.history.back()">목록으로</button>
-    </div>
-  `;
-  window.renderUrbanLikes(String(id));
-  window.renderUrbanComments(String(id));
-  document.getElementById('urbanCommentForm').onsubmit = function(e) {
-    window.writeUrbanComment(e, String(id));
-  };
-}
 function getParamFromURL(name) {
   const params = new URLSearchParams(window.location.search);
   return params.get(name);
@@ -169,7 +146,6 @@ function renderUrbanDetail(id) {
     window.history.back();
   });
 }
-
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('urbanList')) {
