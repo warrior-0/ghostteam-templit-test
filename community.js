@@ -1,35 +1,44 @@
-// Firestore 기반 커뮤니티 목록/상세/댓글/좋아요 전체 구현 (글쓰기 포함)
-// 기존 코드와 충돌 없이 글쓰기, 좋아요, 댓글 기능 모두 포함
+// community 게시글 데이터 예시
+const communityData = [
+  {
+    id: 1,
+    title: '처음 인사드립니다!',
+    likes: 7,
+    date: '2025-05-21',
+    board: 'free',
+    body: '안녕하세요, 괴담지옥 자유게시판에 처음 글을 남깁니다.',
+    detail: '이 사이트에서 다양한 괴담뿐 아니라 자유롭게 소통할 수 있어서 너무 좋네요. 앞으로 잘 부탁드립니다!'
+  },
+  {
+    id: 2,
+    title: '이벤트 공지: 괴담 공모전',
+    likes: 15,
+    date: '2025-05-19',
+    board: 'notice',
+    body: '[이벤트] 6월 괴담 공모전이 시작됩니다!',
+    detail: '6월 한 달간 직접 겪은 괴담, 창작 괴담 등 다양한 이야기를 자유롭게 올려주세요! 우수작은 상품도 드립니다.'
+  },
+  {
+    id: 3,
+    title: '귀신 사진 자료 공유',
+    likes: 3,
+    date: '2025-05-18',
+    board: 'archive',
+    body: '예전에 찍힌 귀신 사진 몇 장 공유합니다.',
+    detail: '사진은 링크로 올릴게요. 혹시 해석 가능하신 분 계시면 의견 부탁드려요!'
+  },
+  {
+    id: 4,
+    title: '오늘 무서운 꿈 꾼 사람 ㅠㅠ',
+    likes: 5,
+    date: '2025-05-20',
+    board: 'free',
+    body: '오늘 새벽에 너무 소름끼치는 꿈을 꿨는데 혹시 해몽 가능하신 분?',
+    detail: '꿈에서 계속 쫓기는 느낌이 들었어요. 혹시 이런 꿈 해몽 아시는 분 계시면 댓글 부탁드려요!'
+  }
+];
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  doc,
-  setDoc,
-  getDoc,
-  deleteDoc,
-  updateDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-const db = getFirestore();
-const auth = getAuth();
-
-let currentUser = null;
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  document.getElementById("writeSection").style.display = user ? "block" : "none";
-});
-
+// 게시판 타입별 한글명 매핑
 const boardTitles = {
   free: '자유게시판',
   notice: '이벤트/공지',
@@ -40,235 +49,129 @@ function getParamFromURL(name) {
   const params = new URLSearchParams(window.location.search);
   return params.get(name);
 }
+
 function updateCommunityTitle(boardTypeOrTitle) {
   const titleElem = document.querySelector('.community-title');
-  if (titleElem) titleElem.textContent = boardTitles[boardTypeOrTitle] || boardTypeOrTitle || '자유게시판';
+  if (titleElem) {
+    titleElem.textContent = boardTitles[boardTypeOrTitle] || boardTypeOrTitle || '자유게시판';
+  }
 }
 
-// 게시글 목록
-async function renderCommunityList(sortType, boardType) {
+function renderCommunityList(sortType, boardType) {
+  let list = [...communityData];
+  if (boardType && boardType !== 'all') {
+    list = list.filter(item => item.board === boardType);
+  }
+  if (sortType === 'latest') {
+    list.sort((a, b) => b.date.localeCompare(a.date));
+  } else if (sortType === 'popular') {
+    list.sort((a, b) => b.likes - a.likes);
+  }
   const communityList = document.getElementById('communityList');
-  const commentSection = document.getElementById('commentSection');
-  if (commentSection) commentSection.style.display = "none";
-  let q = collection(db, "posts");
-  let arr = [];
-  let snap = await getDocs(q);
-  snap.forEach(doc => arr.push({ ...doc.data(), id: doc.id }));
-  if (boardType && boardType !== 'all') arr = arr.filter(x => x.board === boardType);
-  if (sortType === "popular") arr.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
-  else arr.sort((a, b) => (b.created?.seconds || 0) - (a.created?.seconds || 0));
-  if (!arr.length) {
+  if (list.length === 0) {
     communityList.innerHTML = `<div style="color:#bbb; padding:2rem 0;">등록된 게시글이 없습니다.</div>`;
-    return;
-  }
-  communityList.innerHTML = arr.map(data => `
-    <div class="community-item" data-id="${data.id}" style="cursor:pointer;">
-      <div class="community-item-title">${data.title}</div>
-      <div class="community-item-meta">
-        <span>좋아요 <span class="like-count">${data.likeCount || 0}</span>개</span>
-        <span>${data.created ? new Date(data.created.seconds * 1000).toISOString().slice(0, 10) : ""}</span>
-        <span>${boardTitles[data.board]}</span>
-      </div>
-      <div class="community-item-body">${data.body || ""}</div>
-    </div>
-  `).join("");
-  document.querySelectorAll('.community-item').forEach(itemElem => {
-    itemElem.addEventListener('click', function () {
-      const clickId = this.getAttribute('data-id');
-      window.history.pushState({}, '', `?id=${clickId}`);
-      renderCommunityDetail(clickId);
+  } else {
+    communityList.innerHTML =
+      list.map(item => `
+        <div class="community-item" data-id="${item.id}" style="cursor:pointer;">
+          <div class="community-item-title">${item.title}</div>
+          <div class="community-item-meta">
+            <span>좋아요 ${item.likes}개</span>
+            <span>${item.date}</span>
+            <span>${boardTitles[item.board]}</span>
+          </div>
+          <div class="community-item-body">${item.body}</div>
+        </div>
+      `).join('');
+    // 클릭 이벤트 등록(상세보기)
+    document.querySelectorAll('.community-item').forEach(itemElem => {
+      itemElem.addEventListener('click', function(){
+        const clickId = this.getAttribute('data-id');
+        window.history.pushState({}, '', `?id=${clickId}`);
+        renderCommunityDetail(parseInt(clickId, 10));
+      });
     });
-  });
+  }
 }
 
-// 게시글 상세/수정/삭제/좋아요
-async function renderCommunityDetail(id) {
+function renderCommunityDetail(id) {
   const communityList = document.getElementById('communityList');
-  const commentSection = document.getElementById('commentSection');
-  if (commentSection) commentSection.style.display = "block";
-  const docRef = doc(db, "posts", id);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
+  const data = communityData.find(item => item.id === id);
+  if (!data) {
     communityList.innerHTML = `<div style="color:#bbb; padding:2rem 0;">게시글을 찾을 수 없습니다.</div>`;
-    commentSection.style.display = "none";
+    updateCommunityTitle('자유게시판');
     return;
   }
-  const data = docSnap.data();
-  let isMine = currentUser && currentUser.uid === data.authorUid;
-  // 좋아요 여부
-  let isLiked = false;
-  if (currentUser) {
-    const likeDoc = await getDoc(doc(db, "likes", id + "_" + currentUser.uid));
-    isLiked = likeDoc.exists();
-  }
+  // 제목을 상세 제목으로 변경
+  const titleElem = document.querySelector('.community-title');
+  if (titleElem) titleElem.textContent = data.title;
+
   communityList.innerHTML = `
     <div class="community-item community-detail">
       <div class="community-item-title" style="font-size:1.5rem;">${data.title}</div>
       <div class="community-item-meta">
-        <span>좋아요 <span class="like-count">${data.likeCount || 0}</span>개</span>
-        <span>${data.created ? new Date(data.created.seconds * 1000).toISOString().slice(0, 10) : ""}</span>
+        <span>좋아요 ${data.likes}개</span>
+        <span>${data.date}</span>
         <span>${boardTitles[data.board]}</span>
       </div>
-      <div class="community-item-body" style="margin-top:1.5rem; font-size:1.1rem; line-height:1.7;">${data.body || ""}</div>
-      <div style="margin-top:1rem;">
-        <button id="likeBtn" style="background:${isLiked ? "#e01c1c" : "#222"};color:#fafafa;border:none;padding:0.6rem 1.3rem;border-radius:8px;cursor:pointer;">${isLiked ? "♥" : "♡"} 좋아요</button>
-        ${isMine ? `
-          <button id="editBtn" style="background:#444;margin-left:8px;color:#fff;border:none;padding:0.5rem 1.1rem;border-radius:7px;cursor:pointer;">수정</button>
-          <button id="delBtn" style="background:#e01c1c;margin-left:8px;color:#fff;border:none;padding:0.5rem 1.1rem;border-radius:7px;cursor:pointer;">삭제</button>
-        ` : ""}
-        <button class="community-back-btn" style="margin-left:8px;background:#222;color:#fafafa;border:none;padding:0.7rem 1.6rem;border-radius:8px;cursor:pointer;">목록으로</button>
-      </div>
-      <div id="editArea" style="margin-top:1.3rem;display:none;"></div>
+      <div class="community-item-body" style="margin-top:1.5rem; font-size:1.1rem; line-height:1.7;">${data.detail || data.body}</div>
+      <button class="community-back-btn" style="margin-top:2rem; background:#222;color:#fafafa;border:none;padding:0.7rem 1.6rem;border-radius:8px;cursor:pointer;">목록으로</button>
     </div>
   `;
-  document.querySelector('.community-back-btn').onclick = () => window.history.back();
-  // 좋아요
-  document.getElementById('likeBtn').onclick = async function () {
-    if (!currentUser) return alert("로그인 후 이용 가능합니다.");
-    const likeRef = doc(db, "likes", id + "_" + currentUser.uid);
-    const postRef = doc(db, "posts", id);
-    const likeDoc = await getDoc(likeRef); let likeCount = data.likeCount || 0;
-    if (likeDoc.exists()) {
-      await deleteDoc(likeRef);
-      likeCount = Math.max(0, likeCount - 1);
-      await updateDoc(postRef, { likeCount });
-      this.style.background = "#222"; this.innerText = "♡ 좋아요";
-    } else {
-      await setDoc(likeRef, { postId: id, uid: currentUser.uid, timestamp: new Date() });
-      likeCount++;
-      await updateDoc(postRef, { likeCount });
-      this.style.background = "#e01c1c"; this.innerText = "♥ 좋아요";
-    }
-    document.querySelector('.like-count').innerText = likeCount;
-  };
-  // 수정/삭제
-  if (isMine) {
-    document.getElementById('editBtn').onclick = async function () {
-      const editArea = document.getElementById('editArea');
-      editArea.innerHTML = `
-        <form id="editForm">
-          <input type="text" id="editTitle" value="${data.title}" required style="width:99%;margin-bottom:0.5rem;"/>
-          <textarea id="editBody" required style="width:99%;height:80px;">${data.body || ""}</textarea>
-          <button type="submit" style="background:#e01c1c;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:6px;">수정완료</button>
-        </form>
-      `;
-      editArea.style.display = "block";
-      document.getElementById('editForm').onsubmit = async function (e) {
-        e.preventDefault();
-        await updateDoc(doc(db, "posts", id), {
-          title: document.getElementById('editTitle').value,
-          body: document.getElementById('editBody').value
-        });
-        editArea.style.display = "none";
-        renderCommunityDetail(id);
-      };
-    };
-    document.getElementById('delBtn').onclick = async function () {
-      if (confirm("정말 삭제할까요?")) {
-        await deleteDoc(doc(db, "posts", id));
-        window.history.back();
-      }
-    };
-  }
-  // 댓글
-  loadComments(id);
-  document.getElementById('commentForm').onsubmit = async function (e) {
-    e.preventDefault();
-    await submitComment(id);
-  };
-}
-
-// 게시글 작성 (글쓰기 기능)
-document.getElementById('writeForm').onsubmit = async function (e) {
-  e.preventDefault();
-  if (!currentUser) return alert("로그인 후 작성 가능");
-  const t = document.getElementById("writeTitle").value.trim();
-  const b = document.getElementById("writeBody").value.trim();
-  const board = document.getElementById("writeBoard").value;
-  if (!t || !b) return alert("제목/내용 입력");
-  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-  const nickname = userDoc.exists() ? userDoc.data().nickname : "익명";
-  await addDoc(collection(db, "posts"), {
-    title: t, body: b, board,
-    authorUid: currentUser.uid,
-    authorEmail: currentUser.email,
-    authorname: nickname,
-    created: serverTimestamp(),
-    likeCount: 0
-  });
-  document.getElementById("writeTitle").value = "";
-  document.getElementById("writeBody").value = "";
-  renderCommunityList('latest', board);
-};
-
-// 댓글
-async function loadComments(postId) {
-  const commentList = document.getElementById("commentList");
-  commentList.innerHTML = "";
-  const q = query(collection(db, "comments"), where("postId", "==", postId), orderBy("timestamp", "asc"));
-  const snap = await getDocs(q);
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const li = document.createElement("li");
-    li.style.marginBottom = "0.7rem";
-    li.innerHTML = `<strong>${data.authorname || "익명"}</strong>: ${data.comment}`;
-    if (currentUser && data.uid === currentUser.uid) {
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "삭제"; delBtn.style.marginLeft = "0.8rem";
-      delBtn.onclick = async () => { if (confirm("댓글을 삭제?")) { await deleteDoc(doc(db, "comments", docSnap.id)); loadComments(postId); } };
-      li.appendChild(delBtn);
-    }
-    commentList.appendChild(li);
+  document.querySelector('.community-back-btn').addEventListener('click', function(){
+    window.history.back();
   });
 }
-async function submitComment(postId) {
-  if (!currentUser) return alert("로그인 후 댓글 작성");
-  const commentInput = document.getElementById("comment");
-  const comment = commentInput.value.trim();
-  if (!comment) return alert("댓글을 입력해주세요.");
-  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-  const nickname = userDoc.exists() ? userDoc.data().nickname : "익명";
-  await addDoc(collection(db, "comments"), {
-    postId, comment, authorname: nickname, uid: currentUser.uid, timestamp: new Date()
-  });
-  commentInput.value = "";
-  loadComments(postId);
-}
 
-// 진입/정렬/목록/뒤로가기
 document.addEventListener('DOMContentLoaded', () => {
-  let sortType = 'latest';
-  let boardType = getParamFromURL('board') || 'free';
-  const idParam = getParamFromURL('id');
-  if (idParam) renderCommunityDetail(idParam);
-  else { renderCommunityList(sortType, boardType); updateCommunityTitle(boardType); }
-  document.querySelectorAll('.sort-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      sortType = this.dataset.sort;
+  if (document.getElementById('communityList')) {
+    let sortType = 'latest';
+    let boardType = getParamFromURL('board') || 'free';
+    const idParam = getParamFromURL('id');
+    if (idParam) {
+      renderCommunityDetail(parseInt(idParam, 10));
+    } else {
       renderCommunityList(sortType, boardType);
       updateCommunityTitle(boardType);
-    });
-  });
-  const communityMenu = document.getElementById('communityMenu');
-  if (communityMenu) {
-    communityMenu.querySelectorAll('.submenu a').forEach(link => {
-      link.addEventListener('click', function (e) {
-        e.preventDefault();
-        const url = new URL(this.href);
-        const newBoard = url.searchParams.get('board') || 'free';
-        boardType = newBoard;
-        window.history.pushState({}, '', url.pathname + url.search);
+    }
+
+    // 정렬 버튼
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', function(){
+        document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+        this.classList.add('active');
+        sortType = this.dataset.sort;
         renderCommunityList(sortType, boardType);
         updateCommunityTitle(boardType);
       });
     });
+
+    // 세부 메뉴 클릭시 (드롭다운 메뉴)
+    const communityMenu = document.getElementById('communityMenu');
+    if (communityMenu) {
+      communityMenu.querySelectorAll('.submenu a').forEach(link => {
+        link.addEventListener('click', function(e){
+          e.preventDefault();
+          const url = new URL(this.href);
+          const newBoard = url.searchParams.get('board') || 'free';
+          boardType = newBoard;
+          window.history.pushState({}, '', url.pathname + url.search);
+          renderCommunityList(sortType, boardType);
+          updateCommunityTitle(boardType);
+        });
+      });
+    }
+
+    // 뒤로가기/앞으로가기 지원
+    window.addEventListener('popstate', function() {
+      const idParam = getParamFromURL('id');
+      boardType = getParamFromURL('board') || 'free';
+      if (idParam) {
+        renderCommunityDetail(parseInt(idParam, 10));
+      } else {
+        renderCommunityList(sortType, boardType);
+        updateCommunityTitle(boardType);
+      }
+    });
   }
-  window.addEventListener('popstate', function () {
-    const idParam = getParamFromURL('id');
-    boardType = getParamFromURL('board') || 'free';
-    if (idParam) renderCommunityDetail(idParam);
-    else { renderCommunityList(sortType, boardType); updateCommunityTitle(boardType); }
-  });
 });
