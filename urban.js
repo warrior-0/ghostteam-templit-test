@@ -101,7 +101,7 @@ async function loadComments(postId) {
     const div = document.createElement('div');
     div.className = 'comment-item';
     div.innerHTML = `
-      <div><strong>${comment.uid || '익명'}:</strong> <span>${comment.text}</span></div>
+      <div><strong>${comment.nickname || '익명'}:</strong> <span>${comment.text}</span></div>
       ${currentUser?.uid === comment.uid ? `
         <button data-id="${comment.id}" class="editBtn">수정</button>
         <button data-id="${comment.id}" class="deleteBtn">삭제</button>
