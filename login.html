@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>홈 | 괴담지옥</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div style="display: flex; align-items: center;">
+        <div id="menuContainer"></div>
+        <a href="index.html" class="logo">괴담지옥</a>
+        <nav>
+          <ul class="gnb">
+            <li><a href="index.html">홈</a></li>
+            <li id="urbanMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="urban.html">괴담</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="urban.html?filter=all">전체 괴담 모음</a>
+                <a href="urban.html?filter=korea">한국 괴담</a>
+                <a href="urban.html?filter=foreign">해외 괴담</a>
+                <a href="urban.html?filter=true">실화 이야기</a>
+                <a href="urban.html?filter=user">사용자 제보 괴담</a>
+              </div>
+            </li>
+            <li id="communityMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="community.html">커뮤니티</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="community.html?board=free">자유게시판</a>
+                <a href="community.html?board=notice">이벤트/공지</a>
+                <a href="community.html?board=archive">자료실</a>
+              </div>
+            </li>
+            <li id="aboutMenu">
+              <div class="dropdown" tabindex="0">
+                <a href="about.html">정보</a>
+                <span class="dropdown-arrow">&#9660;</span>
+              </div>
+              <div class="submenu">
+                <a href="about.html?page=intro">사이트 소개</a>
+                <a href="about.html?page=greeting">운영자 인사말</a>
+                <a href="about.html?page=contact">문의/제보하기</a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="authSection">
+      <input type="email" size="10" id="email" placeholder="이메일" />
+      <input type="password" size="10" id="password" placeholder="비밀번호" />
+      <input type="text" size="8" id="nickname" placeholder="닉네임" />
+      <button id="signUpBtn">회원가입</button>
+      <button id="signInBtn">로그인</button>
+      <button id="signOutBtn" style="display: none">로그아웃</button>
+    </section>
+
+    <section id="postSection" style="display: none;">
+      <p id="userStatus">로그인 상태 확인 중...</p>
+      <!-- 게시글 목록, 댓글, 평가 등 삽입 가능 -->
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 괴담지옥. All rights reserved.
+  </footer>
+
+  <!-- Firebase 설정 및 기능 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
+      authDomain: "ghost-38f07.firebaseapp.com",
+      projectId: "ghost-38f07",
+      storageBucket: "ghost-38f07.firebasestorage.app",
+      messagingSenderId: "776945022976",
+      appId: "1:776945022976:web:105e545d39f12b5d0940e5",
+      measurementId: "G-B758ZC971V"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    function updateUI(user) {
+      currentUser = user;
+      const userStatus = document.getElementById("userStatus");
+      const authSection = document.getElementById("authSection");
+      const postSection = document.getElementById("postSection");
+      const logoutBtn = document.getElementById("signOutBtn");
+
+      if (user) {
+        userStatus.innerText = `로그인: ${user.email}`;
+        authSection.style.display = "none";
+        postSection.style.display = "block";
+        logoutBtn.style.display = "block";
+
+        loadPosts?.();
+        loadComments?.();
+        calculateAverageRating?.();
+      } else {
+        userStatus.innerText = "로그인 필요";
+        authSection.style.display = "block";
+        postSection.style.display = "none";
+        logoutBtn.style.display = "none";
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      updateUI(user);
+    });
+
+    async function signUp() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const nickname = document.getElementById("nickname").value.trim();
+
+      if (!nickname) {
+        alert("닉네임을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          nickname: nickname,
+        });
+
+        alert("회원가입 완료! 로그인되었습니다.");
+
+        // ✅ 리다이렉션 + 상태 저장
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || 'index.html';
+        localStorage.setItem('loggedInUser', user.email);
+        window.location.href = redirectPath;
+
+      } catch (error) {
+        alert("회원가입 오류: " + error.message);
+      }
+    }
+
+    async function signIn() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        alert("로그인 성공!");
+
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || 'index.html';
+        localStorage.setItem('loggedInUser', user.email);
+        window.location.href = redirectPath;
+
+      } catch (error) {
+        alert("로그인 오류: " + error.message);
+      }
+    }
+
+    async function signOutUser() {
+      await signOut(auth);
+      alert("로그아웃 되었습니다.");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("signUpBtn").addEventListener("click", signUp);
+      document.getElementById("signInBtn").addEventListener("click", signIn);
+      document.getElementById("signOutBtn").addEventListener("click", signOutUser);
+    });
+  </script>
+</body>
+</html>
