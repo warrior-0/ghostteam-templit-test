@@ -149,7 +149,7 @@ function setupCommentSection(postId) {
     await addDoc(collection(db, 'urbanComments'), {
       postId,
       uid: currentUser.uid,
-      nickname: currentUser.email.split('@')[0],
+      nickname: currentUser.nickname,
       text,
       timestamp: Date.now()
     });
