@@ -189,7 +189,6 @@ function showWriteForm() {
 }
 
 // 초기 로딩
-
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('communityList')) {
     let sortType = 'latest';
