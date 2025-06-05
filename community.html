@@ -69,6 +69,19 @@
       <div class="community-list" id="communityList">
         <!-- 게시글 목록/상세가 JS로 렌더링됩니다 -->
       </div>
+      <section style="max-width: 900px; margin: 2rem auto; padding: 0 2rem;">
+  <form id="writeForm" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+    <select id="writeBoard" required>
+      <option value="free">자유게시판</option>
+      <option value="notice">이벤트/공지</option>
+      <option value="archive">자료실</option>
+    </select>
+    <input type="text" id="writeTitle" placeholder="제목" required />
+    <textarea id="writeBody" placeholder="내용을 입력하세요" rows="6" required></textarea>
+    <button type="submit">등록하기</button>
+  </form>
+</section>
+
     </section>
   </main>
 
