@@ -1,4 +1,4 @@
-// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영
+// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가)
 
 import {
   initializeApp
@@ -84,10 +84,14 @@ function setupLikeButton(postId) {
 }
 
 async function getUserNickname(uid) {
-  const userDoc = await getDoc(doc(db, 'users', uid));
-  if (userDoc.exists()) {
-    const data = userDoc.data();
-    return data.nickname || '익명';
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      return data.nickname || '익명';
+    }
+  } catch (err) {
+    console.warn('닉네임 조회 실패:', err);
   }
   return '익명';
 }
@@ -155,22 +159,33 @@ function setupCommentSection(postId) {
     const text = input.value.trim();
     if (!text) return;
 
-    const nickname = await getUserNickname(currentUser.uid);
+    let nickname = '익명';
+    try {
+      nickname = await getUserNickname(currentUser.uid);
+    } catch (e) {
+      console.warn('닉네임 가져오기 실패:', e);
+    }
 
-    await addDoc(collection(db, 'urbanComments'), {
-      postId,
-      uid: currentUser.uid,
-      nickname,
-      text,
-      timestamp: Date.now()
-    });
+    try {
+      await addDoc(collection(db, 'urbanComments'), {
+        postId,
+        uid: currentUser.uid,
+        nickname,
+        text,
+        timestamp: Date.now()
+      });
 
-    input.value = '';
-    loadComments(postId);
+      input.value = '';
+      loadComments(postId);
+    } catch (e) {
+      alert('댓글 저장 실패: ' + e.message);
+      console.error(e);
+    }
   });
 
   loadComments(postId);
 }
+
 
 function renderUrbanDetail(id) {
   const urbanList = document.getElementById('urbanList');
