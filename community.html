@@ -58,26 +58,17 @@
   </header>
 
   <main>
-    <!-- 게시글 작성 폼 -->
-    <section id="postFormSection" style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
-      <h2>게시글 작성</h2>
-      <form id="postForm">
-        <div>
-          <label for="postTitle">제목</label>
-          <input type="text" id="postTitle" name="postTitle" required />
-        </div>
-        <div>
-          <label for="postSummary">줄거리</label>
-          <input type="text" id="postSummary" name="postSummary" required />
-        </div>
-        <div>
-          <label for="postContent">내용</label>
-          <textarea id="postContent" name="postContent" rows="5" required></textarea>
-        </div>
-        <button type="submit">작성하기</button>
-      </form>
-    </section>
-    
+    <form id="writeForm" style="display:none; margin:2rem auto; max-width:600px;">
+  <select id="postBoard" required>
+    <option value="free">자유게시판</option>
+    <option value="notice">이벤트/공지</option>
+    <option value="archive">자료실</option>
+  </select>
+  <input type="text" id="postTitle" placeholder="제목을 입력하세요" required />
+  <input type="text" id="postBody" placeholder="줄거리 (요약)" required />
+  <textarea id="postDetail" placeholder="본문 내용을 입력하세요" required></textarea>
+  <button type="submit">글 작성</button>
+</form>
     <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
       <div class="community-header">
         <div class="community-title">자유게시판</div>
