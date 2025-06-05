@@ -1,4 +1,4 @@
-// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함
+// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영
 
 import {
   initializeApp
@@ -83,6 +83,15 @@ function setupLikeButton(postId) {
   });
 }
 
+async function getUserNickname(uid) {
+  const userDoc = await getDoc(doc(db, 'users', uid));
+  if (userDoc.exists()) {
+    const data = userDoc.data();
+    return data.nickname || '익명';
+  }
+  return '익명';
+}
+
 async function loadComments(postId) {
   const commentList = document.getElementById('commentList');
   commentList.innerHTML = '';
@@ -146,10 +155,12 @@ function setupCommentSection(postId) {
     const text = input.value.trim();
     if (!text) return;
 
+    const nickname = await getUserNickname(currentUser.uid);
+
     await addDoc(collection(db, 'urbanComments'), {
       postId,
       uid: currentUser.uid,
-      nickname: currentUser.nickname,
+      nickname,
       text,
       timestamp: Date.now()
     });
