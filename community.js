@@ -16,7 +16,9 @@ import {
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ─── 1. Firebase 초기화 ─────────────────────────────────────────────────────────────────────────
+  console.log("[community.js] DOMContentLoaded 접속");
+
+  // ─── 1. Firebase 초기화 ─────────────────────────────────────────────────────────
   const firebaseConfig = {
     apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
     authDomain: "ghost-38f07.firebaseapp.com",
@@ -34,20 +36,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUser = null;
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
+    console.log("[Auth] 현재 사용자:", currentUser ? currentUser.email : "없음");
+    // 만약 상세보기 모드에 진입했고, 좋아요 체크가 아직 안 됐으면 재실행
+    if (postId && currentUser) checkUserLike(); 
   });
 
-  // ─── 2. URL 파라미터 가져오기 헬퍼 ────────────────────────────────────────────────────────────────
+  // ─── 2. URL 파라미터 가져오기 헬퍼 ───────────────────────────────────────────────────────
   function getParamFromURL(name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(name);
   }
 
-  // ─── 3. DOM 요소 참조 ─────────────────────────────────────────────────────────────────────────────
-  const postId = getParamFromURL("id"); // 상세보기 모드면 postId가 존재
-  const boardParam = getParamFromURL("board") || "free";
+  // ─── 3. DOM 요소 참조 ─────────────────────────────────────────────────────────────────────
+  const postId = getParamFromURL("id");                  // 상세보기 모드인지 판별
+  const boardParam = getParamFromURL("board") || "free"; // 없으면 기본 "free"
 
   const postDetailContainer = document.getElementById("postDetail");      // 상세보기 영역
-  const boardSelectorSection = document.querySelector(".board-selector"); // 글쓰기 버튼만 들어 있는 섹션
+  const boardSelectorSection = document.querySelector(".board-selector"); // 글쓰기 버튼만 있는 섹션
   const writeForm = document.getElementById("writeForm");                // 글쓰기 폼 전체
   const showWriteFormBtn = document.getElementById("showWriteForm");     // “글쓰기” 버튼
   const communityHeader = document.querySelector(".community-header");    // 제목·정렬 버튼 섹션
@@ -55,16 +60,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const boardTitle = document.getElementById("boardTitle");              // “자유게시판” 등 타이틀
   const sortButtons = document.querySelectorAll(".sort-btn");            // 최신순/인기순 버튼들
 
-  // ─── 4. 게시판 제목(boardTitle) 설정 ───────────────────────────────────────────────────────────────
+  // 요소가 제대로 선택되었는지 확인
+  console.log("[community.js] postDetailContainer:", postDetailContainer);
+  console.log("[community.js] boardSelectorSection:", boardSelectorSection);
+  console.log("[community.js] writeForm:", writeForm);
+  console.log("[community.js] showWriteFormBtn:", showWriteFormBtn);
+  console.log("[community.js] communityHeader:", communityHeader);
+  console.log("[community.js] communityList:", communityList);
+  console.log("[community.js] boardTitle:", boardTitle);
+  console.log("[community.js] sortButtons 개수:", sortButtons.length);
+
+  // ─── 4. 게시판 제목(boardTitle) 설정 ─────────────────────────────────────────────────────
   boardTitle.textContent =
     {
       free: "자유게시판",
       notice: "이벤트/공지",
       archive: "자료실"
     }[boardParam] || "자유게시판";
+  console.log("[community.js] boardParam:", boardParam);
 
-  // ─── 5. 상세보기 모드 분기 ────────────────────────────────────────────────────────────────────────────
+  // ─── 5. 상세보기 모드 분기 ──────────────────────────────────────────────────────────────────
   if (postId) {
+    console.log("[community.js] 상세보기 모드 진입 (postId:", postId, ")");
+
     // (A) 상세보기 모드일 때: 나머지 섹션 모두 숨기기
     if (boardSelectorSection) boardSelectorSection.style.display = "none";
     if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
@@ -80,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const data = docSnap.data();
+      console.log("[community.js] 상세 게시글 데이터:", data);
 
       // 상세보기 화면 구성(메타정보 + 본문 + 좋아요 + 댓글 섹션)
       postDetailContainer.innerHTML = `
@@ -107,13 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-      // ── 좋아요 버튼 로직(한 번만 가능) ────────────────────────────────────────────────────────────
+      // ── 좋아요 버튼 로직(한 번만 가능) ────────────────────────────────────────────────────
       const likeButton = document.getElementById("likeButton");
       let userHasLiked = false;
 
-      // (1) 현재 사용자가 이미 좋아요했는지 확인
+      // (1) 현재 사용자가 이미 좋아요했는지 확인 (likes 컬렉션)
       async function checkUserLike() {
         if (!currentUser) return;
+        console.log("[community.js] 좋아요 중복 체크 시작(postId, uid):", postId, currentUser.uid);
         const likeQuery = query(
           collection(db, "likes"),
           where("postId", "==", postId),
@@ -124,10 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
           userHasLiked = true;
           likeButton.disabled = true;
           likeButton.textContent = "❤️ 이미 좋아요";
+          console.log("[community.js] 이미 좋아요 기록이 존재하여 버튼 비활성화");
         }
       }
 
-      // 현재 로그인 상태면 즉시 체크, 아니면 상태 변경 콜백으로 체크
+      // 현재 로그인 상태면 즉시 체크, 아니면 상태 변경 콜백에서 체크
       if (currentUser) {
         checkUserLike();
       } else {
@@ -139,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // (2) 좋아요 클릭 시
       likeButton?.addEventListener("click", async () => {
+        console.log("[community.js] 좋아요 버튼 클릭 시도");
         if (!currentUser) {
           alert("로그인이 필요합니다.");
           return;
@@ -147,11 +169,14 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("이미 좋아요를 누르셨습니다.");
           return;
         }
-        // (a) likes 컬렉션에 기록
+        console.log("[community.js] 좋아요 처리: likes 컬렉션 추가 + communityPosts.likes 증가");
+
+        // (a) likes 컬렉션에 기록 추가
         await addDoc(collection(db, "likes"), {
           postId,
           uid: currentUser.uid
         });
+
         // (b) communityPosts/{postId}.likes 필드 1 증가
         const postRef = doc(db, "communityPosts", postId);
         await updateDoc(postRef, { likes: increment(1) });
@@ -162,8 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
         likeButton.textContent = "❤️ 이미 좋아요";
       });
 
-      // ── 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────────────
+      // ── 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────
       async function loadComments() {
+        console.log("[community.js] loadComments 호출");
         const commentListEl = document.getElementById("commentList");
         commentListEl.innerHTML = ""; // 초기화
 
@@ -269,9 +295,10 @@ document.addEventListener("DOMContentLoaded", () => {
       // 최초 댓글 로딩
       loadComments();
 
-      // ── 댓글 추가 로직 ───────────────────────────────────────────────────────────────────────
+      // ── 댓글 추가 로직 ▽────────────────────────────────────────────────────────────────────────
       const addCommentButton = document.getElementById("addCommentButton");
       addCommentButton?.addEventListener("click", async () => {
+        console.log("[community.js] 댓글 작성 버튼 클릭");
         if (!currentUser) {
           alert("로그인이 필요합니다.");
           return;
@@ -307,25 +334,28 @@ document.addEventListener("DOMContentLoaded", () => {
     return; // 상세보기 모드이므로 목록·글쓰기 로직으로 내려가지 않음
   }
 
-  // ─── 6. 목록 모드일 때(= postId가 없을 때) ────────────────────────────────────────────────────────
+  // ─── 6. 목록 모드일 때(= postId가 없을 때) ─────────────────────────────────────────────────────
+  console.log("[community.js] 목록 모드 진입 (postId 없음)");
   // (A) “글쓰기” 버튼 & 폼 노출 여부 결정
   if (boardParam === "free" || boardParam === "notice") {
-    // 초기에 폼은 숨겨둡니다.
+    // 자유게시판 또는 이벤트/공지인 경우 버튼만 보이게 → 폼은 초기 hidden
     if (writeForm) writeForm.style.display = "none";
     if (showWriteFormBtn) showWriteFormBtn.style.display = "inline-block";
   } else {
-    // free/notice 외(archive 등)에는 둘 다 숨김
+    // 자료실 등인 경우 모두 숨김
     if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
     if (writeForm) writeForm.style.display = "none";
   }
 
   // (B) 글쓰기 폼 토글 및 제출 처리
   showWriteFormBtn?.addEventListener("click", () => {
+    console.log("[community.js] 글쓰기 버튼 클릭 → 폼 토글");
     writeForm.style.display = writeForm.style.display === "none" ? "block" : "none";
   });
 
   writeForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.log("[community.js] 글쓰기 폼 제출 시도");
     if (!currentUser) {
       alert("로그인이 필요합니다.");
       return;
@@ -366,6 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // (C) 게시글 목록 불러오기 & 렌더링 함수 정의
   async function loadPosts(board, sort = "latest") {
+    console.log("[community.js] loadPosts 호출, board:", board, "sort:", sort);
     communityList.innerHTML = "";
 
     const q = query(collection(db, "communityPosts"), where("board", "==", board));
@@ -376,6 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
       posts.push({ id: docSnap.id, ...docSnap.data() });
     });
 
+    // 정렬: 인기순 vs 최신순
     posts.sort((a, b) => {
       if (sort === "popular") {
         return b.likes - a.likes;
