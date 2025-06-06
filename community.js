@@ -110,9 +110,9 @@ async function setupWriteForm() {
     e.preventDefault();
     if (!currentUser) return alert('로그인이 필요합니다');
 
-    const title = document.getElementById('postTitle').value.trim();
-    const body = document.getElementById('postBody').value.trim();
-    const detail = document.getElementById('postDetailInput').value.trim();
+    const title = document.getElementById('writeTitle').value.trim();
+    const body = document.getElementById('writeBody').value.trim();
+    const detail = document.getElementById('writeDetail').value.trim();
 
     if (!title || !body || !detail) return alert('모든 필드를 입력하세요');
 
@@ -139,6 +139,16 @@ async function setupWriteForm() {
 const board = getParamFromURL('board') || 'free';
 const postId = getParamFromURL('id');
 const detailContainer = document.getElementById('postDetail');
+
+const boardTitles = {
+  free: '자유게시판',
+  notice: '이벤트/공지',
+  archive: '자료실'
+};
+const boardTitleElem = document.getElementById('communityBoardTitle');
+if (boardTitleElem) {
+  boardTitleElem.textContent = boardTitles[board] || '커뮤니티';
+}
 
 if (postId && detailContainer) {
   getDoc(doc(db, 'communityPosts', postId)).then(docSnap => {
