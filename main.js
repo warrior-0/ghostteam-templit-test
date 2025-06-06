@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnWrapper = document.createElement('div');
     btnWrapper.className = 'bgm-header-control';
     btnWrapper.id = 'authBtnContainer';
-    btnWrapper.innerHTML = `<button id="authBtn">🔐 로그인</button>`;
+    btnWrapper.innerHTML = `<button id="authBtn">로그인</button>`;
     headerInner.appendChild(btnWrapper);
   }
 
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // 로그인 상태에 따라 버튼 텍스트 변경
   onAuthStateChanged(auth, user => {
     if (user && authBtn) {
-      authBtn.textContent = '🔓 로그아웃';
+      authBtn.textContent = '로그아웃';
     } else if (authBtn) {
-      authBtn.textContent = '🔐 로그인';
+      authBtn.textContent = '로그인';
     }
   });
 
