@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data.likes += 1;
         userHasLiked = true;
         likeButton.disabled = true;
-        likeButton.textContent = "❤️ 이미 좋아요";
+        likeButton.textContent = "❤️ 이미 좋아요를 누르셨습니다";
       });
 
       // ── 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────
