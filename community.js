@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ─── 6. 목록 모드일 때(= postId가 없을 때) ─────────────────────────────────────────────────────
   console.log("[community.js] 목록 모드 진입 (postId 없음)");
   // (A) “글쓰기” 버튼 & 폼 노출 여부 결정
-  if (boardParam === "free" || boardParam === "notice") {
+  if (boardParam === "free") {
     // 자유게시판 또는 이벤트/공지인 경우 버튼만 보이게 → 폼은 초기 hidden
     if (writeForm) writeForm.style.display = "none";
     if (showWriteFormBtn) showWriteFormBtn.style.display = "inline-block";
