@@ -261,7 +261,7 @@ const urbanData = [
   {
     id: 3,
     title: '기묘한 아파트 엘리베이터',
-    likes: 9,
+    likes: 9999999999,
     date: '2025-05-21',
     filter: 'foreign',
     level: 4,
