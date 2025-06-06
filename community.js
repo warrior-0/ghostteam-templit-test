@@ -67,8 +67,13 @@ if (!postId) {
       archive: "자료실"
     }[boardParam] || "자유게시판";
 
-  // “글쓰기” 버튼은 자유게시판(free)인 경우에만 표시
-  if (boardParam !== "free") {
+  // “글쓰기” 버튼은 자유게시판(free) 또는 이벤트/공지(notice)일 때만 표시
+  if (boardParam === "free" || boardParam === "notice") {
+    // 두 경우 모두 기본 상태는 writeForm 숨김
+    if (writeForm) writeForm.style.display = "none";
+    if (showWriteFormBtn) showWriteFormBtn.style.display = "inline-block";
+  } else {
+    // 그 외(archive 등)에는 글쓰기 버튼/폼 모두 숨김
     if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
     if (writeForm) writeForm.style.display = "none";
   }
