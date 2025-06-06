@@ -10,7 +10,8 @@ import {
   deleteDoc,
   collection,
   query,
-  where
+  where,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -56,9 +57,24 @@ const sortButtons = document.querySelectorAll(".sort-btn");           // .sort-b
 
 // ─── 4. “상세보기 모드가 아닌 경우” (목록 모드) ────────────────────────────────────────────────────
 if (!postId) {
+  // 4-0. 게시판 파라미터 및 “글쓰기” 표시 여부 결정 ───────────────────────────────────────────────
+  const boardParam = getParamFromURL("board") || "free";
+  boardSelector.value = boardParam;
+  boardTitle.textContent =
+    {
+      free: "자유게시판",
+      notice: "이벤트/공지",
+      archive: "자료실"
+    }[boardParam] || "자유게시판";
+
+  // “글쓰기” 버튼은 자유게시판(free)인 경우에만 표시
+  if (boardParam !== "free") {
+    if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
+    if (writeForm) writeForm.style.display = "none";
+  }
+
   // 4-1. 글쓰기 폼 토글 및 처리 ───────────────────────────────────────────────────────────────
   showWriteFormBtn?.addEventListener("click", () => {
-    // 클릭할 때마다 폼 보이기/숨기기
     writeForm.style.display = writeForm.style.display === "none" ? "block" : "none";
   });
 
@@ -148,17 +164,7 @@ if (!postId) {
     });
   }
 
-  // 4-3. 게시판 및 정렬 버튼 초기화 & 이벤트 연결 ─────────────────────────────────────────────
-  const boardParam = getParamFromURL("board") || "free";
-  boardSelector.value = boardParam;
-  boardTitle.textContent =
-    {
-      free: "자유게시판",
-      notice: "이벤트/공지",
-      archive: "자료실"
-    }[boardParam] || "자유게시판";
-
-  // 정렬 버튼 클릭 시 active 클래스 토글 후 재호출
+  // 4-3. 정렬 버튼 초기화 & 이벤트 연결 ───────────────────────────────────────────────────────────
   let currentSort = "latest";
   sortButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -169,21 +175,21 @@ if (!postId) {
     });
   });
 
-  // 최초 로드: 게시판 목록
+  // 4-4. 최초 로드: 게시판 목록 ─────────────────────────────────────────────────────────────────
   loadPosts(boardParam, currentSort);
 
-  // 게시판 선택(select) 변경 시 다른 게시판으로 이동
+  // 4-5. 게시판 선택(select) 변경 시 다른 게시판으로 이동 ─────────────────────────────────────────
   boardSelector?.addEventListener("change", (e) => {
     const newBoard = e.target.value;
     location.href = `community.html?board=${newBoard}`;
   });
 }
 
-
 // ─── 5. 상세보기 모드(postId가 있을 때) ───────────────────────────────────────────────────────────
 if (postId && postDetailContainer) {
   // (A) 상세보기 모드일 때: 상단 게시판 선택, 글쓰기 폼, 커뮤니티 헤더(제목/정렬), 목록을 숨김
   if (boardSelectorSection) boardSelectorSection.style.display = "none";
+  if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
   if (writeForm) writeForm.style.display = "none";
   if (communityHeader) communityHeader.style.display = "none";
   if (communityList) communityList.style.display = "none";
@@ -223,20 +229,63 @@ if (postId && postDetailContainer) {
       </div>
     `;
 
-    // ── 좋아요 버튼 로직 ─────────────────────────────────────────────────────────────────────
     const likeButton = document.getElementById("likeButton");
+    let userHasLiked = false;
+
+    // ── (C) 좋아요 중복 방지 및 초기 상태 확인 ────────────────────────────────────────────────────
+    async function checkUserLike() {
+      if (!currentUser) return;
+      const likeQuery = query(
+        collection(db, "likes"),
+        where("postId", "==", postId),
+        where("uid", "==", currentUser.uid)
+      );
+      const likeSnap = await getDocs(likeQuery);
+      if (!likeSnap.empty) {
+        userHasLiked = true;
+        likeButton.disabled = true;
+        likeButton.textContent = "❤️ 이미 좋아요";
+      }
+    }
+
+    // 현재 로그인 상태 확인 후 좋아요 여부 체크
+    if (currentUser) {
+      checkUserLike();
+    } else {
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) checkUserLike();
+      });
+    }
+
+    // ── (D) 좋아요 버튼 클릭 시 ───────────────────────────────────────────────────────────────────
     likeButton?.addEventListener("click", async () => {
       if (!currentUser) {
         alert("로그인이 필요합니다.");
         return;
       }
+      if (userHasLiked) {
+        alert("이미 좋아요를 누르셨습니다.");
+        return;
+      }
+
+      // 1) likes 컬렉션에 기록 추가
+      await addDoc(collection(db, "likes"), {
+        postId,
+        uid: currentUser.uid
+      });
+
+      // 2) communityPosts/{postId}.likes 필드를 1 증가
       const postRef = doc(db, "communityPosts", postId);
-      await updateDoc(postRef, { likes: data.likes + 1 });
+      await updateDoc(postRef, { likes: increment(1) });
+
       data.likes += 1;
-      likeButton.textContent = `❤️ 좋아요 (${data.likes})`;
+      userHasLiked = true;
+      likeButton.disabled = true;
+      likeButton.textContent = "❤️ 이미 좋아요";
     });
 
-    // ── 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────────────
+    // ── (E) 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────────────
     async function loadComments() {
       const commentListEl = document.getElementById("commentList");
       commentListEl.innerHTML = "";
@@ -342,7 +391,7 @@ if (postId && postDetailContainer) {
     // 최초 댓글 로딩
     loadComments();
 
-    // ── 댓글 추가 로직 ────────────────────────────────────────────────────────────────────────────
+    // ── (F) 댓글 추가 로직 ───────────────────────────────────────────────────────────────────────
     const addCommentButton = document.getElementById("addCommentButton");
     addCommentButton?.addEventListener("click", async () => {
       if (!currentUser) {
