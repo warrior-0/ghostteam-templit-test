@@ -19,7 +19,7 @@
             <li id="urbanMenu">
               <div class="dropdown" tabindex="0">
                 <a href="urban.html">괴담</a>
-                <span class="dropdown-arrow">&#9660;</span>
+                <span class="dropdown-arrow">▼</span>
               </div>
               <div class="submenu">
                 <a href="urban.html?filter=all">전체 괴담 모음</a>
@@ -32,7 +32,7 @@
             <li id="communityMenu">
               <div class="dropdown" tabindex="0">
                 <a href="community.html">커뮤니티</a>
-                <span class="dropdown-arrow">&#9660;</span>
+                <span class="dropdown-arrow">▼</span>
               </div>
               <div class="submenu">
                 <a href="community.html?board=free">자유게시판</a>
@@ -43,7 +43,7 @@
             <li id="aboutMenu">
               <div class="dropdown" tabindex="0">
                 <a href="about.html">정보</a>
-                <span class="dropdown-arrow">&#9660;</span>
+                <span class="dropdown-arrow">▼</span>
               </div>
               <div class="submenu">
                 <a href="about.html?page=intro">사이트 소개</a>
@@ -58,36 +58,40 @@
   </header>
 
   <main>
-  <!-- 글쓰기 폼 -->
-  <form id="writeForm" style="display:none; margin:2rem auto; max-width:600px;">
-    <select id="postBoard" required>
-      <option value="free">자유게시판</option>
-    </select>
-    <input type="text" id="postTitle" placeholder="제목을 입력하세요" required />
-    <input type="text" id="postBody" placeholder="줄거리 (요약)" required />
-    <textarea id="postDetailInput" placeholder="본문 내용을 입력하세요" required></textarea>
-    <button type="submit">글 작성</button>
-  </form>
+    <section class="board-selector" style="text-align:center;margin:2rem 0;">
+      <select id="boardSelector">
+        <option value="free">자유게시판</option>
+        <option value="notice">이벤트/공지</option>
+        <option value="archive">자료실</option>
+      </select>
+      <button id="showWriteForm">글쓰기</button>
+    </section>
 
-  <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
-    <div class="community-header">
-      <div class="community-title">자유게시판</div>
-      <div class="community-sort">
-        <button class="sort-btn active" data-sort="latest">최신순</button>
-        <button class="sort-btn" data-sort="popular">인기순</button>
+    <form id="writeForm" style="display:none; margin:2rem auto; max-width:600px;">
+      <select id="writeBoard" required>
+        <option value="free">자유게시판</option>
+        <option value="notice">이벤트/공지</option>
+        <option value="archive">자료실</option>
+      </select>
+      <input type="text" id="writeTitle" placeholder="제목을 입력하세요" required />
+      <input type="text" id="writeBody" placeholder="줄거리 (요약)" required />
+      <textarea id="postDetailInput" placeholder="본문 내용을 입력하세요" required></textarea>
+      <button type="submit">글 작성</button>
+    </form>
+
+    <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
+      <div class="community-header">
+        <div class="community-title" id="boardTitle">자유게시판</div>
+        <div class="community-sort">
+          <button class="sort-btn active" data-sort="latest">최신순</button>
+          <button class="sort-btn" data-sort="popular">인기순</button>
+        </div>
       </div>
-    </div>
 
-    <!-- ✅ 게시글 목록 영역 -->
-    <div class="community-list" id="communityList">
-      <!-- 목록이 여기에 렌더링됩니다 -->
-    </div>
-
-    <!-- ✅ 게시글 상세 + 댓글 영역 (없어서 추가함) -->
-    <div id="postDetail" style="margin-top: 2rem;"></div>
-
-  </section>
-</main>
+      <div class="community-list" id="communityList"></div>
+      <div id="postDetail" style="margin-top: 2rem;"></div>
+    </section>
+  </main>
 
   <footer>
     &copy; 2025 괴담지옥. All rights reserved.
