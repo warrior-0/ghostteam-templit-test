@@ -239,7 +239,7 @@ const urbanData = [
   {
     id: 1,
     title: '밤길에 들리는 발소리',
-    likes: <span id="likeCount">0</span>,
+    likes: 13,
     date: '2025-05-20',
     filter: 'korea',
     level: 3,
@@ -250,7 +250,7 @@ const urbanData = [
   {
     id: 2,
     title: '학교의 괴담',
-    likes: <span id="likeCount">0</span>,
+    likes: 25,
     date: '2025-05-18',
     filter: 'korea',
     level: 2,
