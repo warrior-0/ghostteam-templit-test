@@ -224,7 +224,42 @@ function renderUrbanDetail(id) {
       <button class="urban-back-btn" style="margin-top:2rem; background:#222; color:#fafafa; border:none; padding:0.7rem 1.6rem; border-radius:8px; cursor:pointer;">목록으로</button>
     </div>
   `;
+   // (4) 음성 모드 토글 로직
+  const playBtn = document.getElementById('playVoiceBtn');
+  const audioEl = document.getElementById('urbanVoiceAudio');
+  let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
+  function updateVoiceState(play) {
+    if (play) {
+      audioEl.style.display = 'block';
+      audioEl.currentTime = 0;
+      audioEl.play().catch(() => {});
+      playBtn.textContent = '🎧 음성 모드 ON';
+      localStorage.setItem('voiceModeStatus', 'on');
+    } else {
+      audioEl.pause();
+      audioEl.style.display = 'none';
+      playBtn.textContent = '🎧 음성 모드 OFF';
+      localStorage.setItem('voiceModeStatus', 'off');
+    }
+  }
+  updateVoiceState(voicePlaying);
+  if (playBtn && audioEl) {
+    playBtn.addEventListener('click', () => {
+      voicePlaying = !voicePlaying;
+      updateVoiceState(voicePlaying);
+    });
+  }
 
+  // (5) “목록으로” 클릭 시: 헤더 복원 + 리스트 렌더
+  const backBtn = document.querySelector('.urban-back-btn');
+  backBtn.addEventListener('click', () => {
+    window.history.pushState({}, '', window.location.pathname);
+    let sortType   = 'latest';
+    let filterType = getParamFromURL('filter') || 'all';
+    renderUrbanList(sortType, filterType);
+    updateUrbanTitle(filterType);
+  });
+}
   // 뒤로가기 버튼 이벤트 바인딩
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
     window.history.back();
