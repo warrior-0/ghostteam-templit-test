@@ -195,7 +195,7 @@ function renderUrbanDetail(id) {
 
   // 상세 뷰 HTML + 오디오 버튼 & <audio> 태그 포함
   urbanList.innerHTML = `
-    <div class="product-card urban-item urban-detail" style="width:100%;max-width:600px;margin:0 auto; position: relative;">
+    <div class="product-card urban-item urban-detail" style="width:100%;max-width:1200px;margin:0 auto; position: relative;">
       <!-- 음성 모드 버튼 -->
       <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
         <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
