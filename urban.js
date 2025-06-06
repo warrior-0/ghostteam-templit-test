@@ -212,8 +212,12 @@ function renderUrbanDetail(id) {
       <!-- 상세 콘텐츠 -->
       <div class="urban-item-title" style="font-size:1.5rem; margin-bottom:0.6rem;">${data.title}</div>
       <div class="urban-item-meta"><span>${data.date}</span></div>
-      <div style="color:#e01c1c; font-size:1rem; margin-bottom:0.8rem;">공포 난이도: ${renderLevelStars(data.level)}</div>
-      <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">${data.detail}</div>
+      <div style="color:#e01c1c; font-size:1rem; margin-bottom:0.8rem;">
+        공포 난이도: ${renderLevelStars(data.level)}
+      </div>
+      <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">
+        ${data.detail}
+      </div>
 
       <!-- 좋아요 섹션 -->
       <div class="like-section" style="margin-top:1rem;">
@@ -239,9 +243,7 @@ function renderUrbanDetail(id) {
   // (3) “목록으로” 클릭 시: 리스트 화면으로 복원
   const backBtn = document.querySelector('.urban-back-btn');
   backBtn.addEventListener('click', () => {
-    // URL에서 ?id 파라미터 제거
     window.history.pushState({}, '', window.location.pathname);
-    // 다시 리스트 렌더링
     let sortType = 'latest';
     let filterType = getParamFromURL('filter') || 'all';
     renderUrbanList(sortType, filterType);
@@ -255,14 +257,13 @@ function renderUrbanDetail(id) {
   // (5) 음성 모드 토글 로직
   const playBtn = document.getElementById('playVoiceBtn');
   const audioEl = document.getElementById('urbanVoiceAudio');
-  // localStorage에 저장된 상태(“on”/“off”)를 불러오기
   let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
 
   function updateVoiceState(play) {
     if (play) {
       audioEl.style.display = 'block';
       audioEl.currentTime = 0;
-      audioEl.play().catch(() => {}); 
+      audioEl.play().catch(() => {});
       playBtn.textContent = '🎧 음성 모드 ON';
       localStorage.setItem('voiceModeStatus', 'on');
     } else {
@@ -281,7 +282,8 @@ function renderUrbanDetail(id) {
     voicePlaying = !voicePlaying;
     updateVoiceState(voicePlaying);
   });
-}
+} // ← 이곳에서 function renderUrbanDetail이 끝난다
+
 
   // 뒤로가기 버튼 이벤트 바인딩
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
