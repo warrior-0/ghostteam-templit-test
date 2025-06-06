@@ -195,6 +195,18 @@ function renderUrbanDetail(id) {
   if (titleElem) titleElem.textContent = data.title;
 
   urbanList.innerHTML = '';
+  <div class="product-card urban-item urban-detail" style="width:100%; max-width:1200px; margin:0 auto; position:relative;">
+      <!-- 음성 모드 버튼 -->
+      <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
+        <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
+          🎧 음성 모드
+        </button>
+        <audio id="urbanVoiceAudio" style="display:none; margin-top:0.5rem; width:100%;">
+          <source src="urban${id}.mp3" type="audio/mpeg">
+          브라우저가 오디오를 지원하지 않습니다.
+        </audio>
+      </div>
+
 list.forEach(async item => {
   const likeDoc = await getDoc(doc(db, 'urbanLikes', String(item.id)));
   const likeCount = likeDoc.exists() ? likeDoc.data().count || 0 : 0;
