@@ -194,30 +194,32 @@ function renderUrbanDetail(id) {
   const titleElem = document.querySelector('.urban-title');
   if (titleElem) titleElem.textContent = data.title;
 
-  urbanList.innerHTML = `
-    <div class="product-card urban-item urban-detail" style="width:100%;max-width:600px;margin:0 auto;">
-      <div class="urban-item-title" style="font-size:1.5rem;margin-bottom:0.6rem;">${data.title}</div>
-      <div class="urban-item-meta">
-        <span>${data.date}</span>
-      </div>
-      <div style="color:#e01c1c;font-size:1rem;margin-bottom:0.8rem;">공포 난이도: ${renderLevelStars(data.level)}</div>
-      <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">${data.detail}</div>
+  urbanList.innerHTML = '';
+list.forEach(async item => {
+  const likeDoc = await getDoc(doc(db, 'urbanLikes', String(item.id)));
+  const likeCount = likeDoc.exists() ? likeDoc.data().count || 0 : 0;
 
-      <div class="like-section" style="margin-top: 1rem;">
-        <button id="likeBtn">❤️ 좋아요</button> <span id="likeCount">0</span>
-      </div>
-
-      <div class="comment-section" style="margin-top:2rem;">
-        <form id="commentForm">
-          <input type="text" id="commentInput" placeholder="댓글을 입력하세요" required />
-          <button type="submit">댓글 작성</button>
-        </form>
-        <div id="commentList"></div>
-      </div>
-
-      <button class="urban-back-btn" style="margin-top:2rem; background:#222;color:#fafafa;border:none;padding:0.7rem 1.6rem;border-radius:8px;cursor:pointer;">목록으로</button>
+  const div = document.createElement('div');
+  div.className = 'product-card urban-item';
+  div.setAttribute('data-id', item.id);
+  div.style.cursor = 'pointer';
+  div.innerHTML = `
+    <img src="${item.thumb}" alt="${item.title}" style="width:100%;height:115px;object-fit:cover;border-radius:8px;margin-bottom:0.8rem;">
+    <div class="urban-item-title" style="margin-bottom:0.5rem;">${item.title}</div>
+    <div class="urban-item-meta" style="margin-bottom:0.4rem;">
+      <span>좋아요 ${likeCount}개</span>
+      <span>${item.date}</span>
     </div>
+    <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
   `;
+  div.addEventListener('click', function () {
+    const clickId = this.getAttribute('data-id');
+    window.history.pushState({}, '', `?id=${clickId}`);
+    renderUrbanDetail(parseInt(clickId, 10));
+  });
+  urbanList.appendChild(div);
+});
+
 
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
     window.history.back();
