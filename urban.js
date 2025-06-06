@@ -1,4 +1,5 @@
 // ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가)
+
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -190,41 +191,22 @@ function renderUrbanDetail(id) {
   const urbanList = document.getElementById('urbanList');
   const data = urbanData.find(item => item.id === id);
   if (!data) return;
-
-  // (1) 상단 타이틀 업데이트
   const titleElem = document.querySelector('.urban-title');
   if (titleElem) titleElem.textContent = data.title;
 
-  // (2) 상세 뷰 HTML을 백틱으로 묶어서 할당
   urbanList.innerHTML = `
-    <div class="product-card urban-item urban-detail" style="width:100%; max-width:1200px; margin:0 auto; position:relative;">
-      <!-- 음성 모드 버튼 -->
-      <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
-        <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
-          🎧 음성 모드
-        </button>
-        <audio id="urbanVoiceAudio" style="display:none; margin-top:0.5rem; width:100%;">
-          <source src="urban${id}.mp3" type="audio/mpeg">
-          브라우저가 오디오를 지원하지 않습니다.
-        </audio>
+    <div class="product-card urban-item urban-detail" style="width:100%;max-width:600px;margin:0 auto;">
+      <div class="urban-item-title" style="font-size:1.5rem;margin-bottom:0.6rem;">${data.title}</div>
+      <div class="urban-item-meta">
+        <span>${data.date}</span>
       </div>
+      <div style="color:#e01c1c;font-size:1rem;margin-bottom:0.8rem;">공포 난이도: ${renderLevelStars(data.level)}</div>
+      <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">${data.detail}</div>
 
-      <!-- 상세 콘텐츠 -->
-      <div class="urban-item-title" style="font-size:1.5rem; margin-bottom:0.6rem;">${data.title}</div>
-      <div class="urban-item-meta"><span>${data.date}</span></div>
-      <div style="color:#e01c1c; font-size:1rem; margin-bottom:0.8rem;">
-        공포 난이도: ${renderLevelStars(data.level)}
-      </div>
-      <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">
-        ${data.detail}
-      </div>
-
-      <!-- 좋아요 섹션 -->
-      <div class="like-section" style="margin-top:1rem;">
+      <div class="like-section" style="margin-top: 1rem;">
         <button id="likeBtn">❤️ 좋아요</button> <span id="likeCount">0</span>
       </div>
 
-      <!-- 댓글 섹션 -->
       <div class="comment-section" style="margin-top:2rem;">
         <form id="commentForm">
           <input type="text" id="commentInput" placeholder="댓글을 입력하세요" required />
@@ -233,64 +215,14 @@ function renderUrbanDetail(id) {
         <div id="commentList"></div>
       </div>
 
-      <!-- 목록으로 버튼 -->
-      <button class="urban-back-btn" style="margin-top:2rem; background:#222; color:#fafafa; border:none; padding:0.7rem 1.6rem; border-radius:8px; cursor:pointer;">
-        목록으로
-      </button>
+      <button class="urban-back-btn" style="margin-top:2rem; background:#222;color:#fafafa;border:none;padding:0.7rem 1.6rem;border-radius:8px;cursor:pointer;">목록으로</button>
     </div>
   `;
 
-  // (3) “목록으로” 클릭 시: 리스트 화면으로 복원
-  const backBtn = document.querySelector('.urban-back-btn');
-  backBtn.addEventListener('click', () => {
-    window.history.pushState({}, '', window.location.pathname);
-    let sortType = 'latest';
-    let filterType = getParamFromURL('filter') || 'all';
-    renderUrbanList(sortType, filterType);
-    updateUrbanTitle(filterType);
-  });
-
-  // (4) 좋아요·댓글 기능 초기화
-  setupLikeButton(id);
-  setupCommentSection(id);
-
-  // (5) 음성 모드 토글 로직
-  const playBtn = document.getElementById('playVoiceBtn');
-  const audioEl = document.getElementById('urbanVoiceAudio');
-  let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
-
-  function updateVoiceState(play) {
-    if (play) {
-      audioEl.style.display = 'block';
-      audioEl.currentTime = 0;
-      audioEl.play().catch(() => {});
-      playBtn.textContent = '🎧 음성 모드 ON';
-      localStorage.setItem('voiceModeStatus', 'on');
-    } else {
-      audioEl.pause();
-      audioEl.style.display = 'none';
-      playBtn.textContent = '🎧 음성 모드 OFF';
-      localStorage.setItem('voiceModeStatus', 'off');
-    }
-  }
-
-  // 초기 상태 반영
-  updateVoiceState(voicePlaying);
-
-  // 버튼 클릭 시 토글
-  playBtn.addEventListener('click', () => {
-    voicePlaying = !voicePlaying;
-    updateVoiceState(voicePlaying);
-  });
-} // ← 이곳에서 function renderUrbanDetail이 끝난다
-
-
-  // 뒤로가기 버튼 이벤트 바인딩
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
     window.history.back();
   });
 
-  // 좋아요·댓글 기능 초기화
   setupLikeButton(id);
   setupCommentSection(id);
 }
