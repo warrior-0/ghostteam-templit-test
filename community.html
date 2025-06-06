@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <title>커뮤니티 | 괴담지옥</title>
   <link rel="stylesheet" href="style.css" />
-  <script type="module" src="main.js"></script>
-  <script type="module" src="community.js"></script>
+  <!-- 스크립트 태그는 아래 body 맨 아래로 이동했습니다 -->
 </head>
 <body>
   <header>
@@ -58,10 +57,12 @@
   </header>
 
   <main>
-    <section class="board-selector" style="text-align:center;margin:2rem 0;">
+    <!-- 1) 글쓰기 버튼 영역 -->
+    <section class="board-selector" style="text-align:center; margin:2rem 0;">
       <button id="showWriteForm">글쓰기</button>
     </section>
 
+    <!-- 2) 글쓰기 폼 -->
     <form id="writeForm" style="display:none; margin:2rem auto; max-width:600px;">
       <select id="writeBoard" required>
         <option value="free">자유게시판</option>
@@ -74,6 +75,7 @@
       <button type="submit">글 작성</button>
     </form>
 
+    <!-- 3) 게시판 타이틀·정렬 버튼 영역 -->
     <section style="max-width: 900px; margin: 2.5rem auto 0 auto; padding: 0 2rem;">
       <div class="community-header">
         <div class="community-title" id="boardTitle">자유게시판</div>
@@ -83,7 +85,10 @@
         </div>
       </div>
 
+      <!-- 4) 글 목록 출력 영역 -->
       <div class="community-list" id="communityList"></div>
+
+      <!-- 5) 상세보기(댓글·좋아요 포함) 출력 영역 -->
       <div id="postDetail" style="margin-top: 2rem;"></div>
     </section>
   </main>
@@ -91,5 +96,9 @@
   <footer>
     &copy; 2025 괴담지옥. All rights reserved.
   </footer>
+
+  <!-- ─── SCRIPT: 항상 body 맨 아래에 두기 ──────────────────────────────────── -->
+  <script type="module" src="main.js"></script>
+  <script type="module" src="community.js"></script>
 </body>
 </html>
