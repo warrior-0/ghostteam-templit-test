@@ -4,269 +4,450 @@ import {
   getFirestore,
   doc,
   getDoc,
+  addDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   collection,
-  addDoc,
-  getDocs,
-  serverTimestamp,
   query,
-  orderBy
+  where,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ====== Firebase 설정 ======
-const firebaseConfig = {
-  apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
-  authDomain: "ghost-38f07.firebaseapp.com",
-  projectId: "ghost-38f07",
-  storageBucket: "ghost-38f07.appspot.com",
-  messagingSenderId: "776945022976",
-  appId: "1:776945022976:web:105e545d39f12"
-};
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[community.js] DOMContentLoaded 접속");
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+  // ─── 1. Firebase 초기화 ─────────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
+    authDomain: "ghost-38f07.firebaseapp.com",
+    projectId: "ghost-38f07",
+    storageBucket: "ghost-38f07.appspot.com",
+    messagingSenderId: "776945022976",
+    appId: "1:776945022976:web:105e545d39f12b5d0940e5",
+    measurementId: "G-B758ZC971V"
+  };
 
-// 전역 변수: 현재 로그인된 사용자 정보 저장용
-let currentUser = null;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-// DOM 요소
-const postForm = document.getElementById("postForm");
-const postTitleInput = document.getElementById("postTitle");
-const postBodyInput = document.getElementById("postBody");
-const loginPrompt = document.getElementById("loginPrompt");
-const postsContainer = document.getElementById("postsContainer");
-
-// 1) 사용자 인증 상태를 감시 -> 로그인/로그아웃 시 UI 변경 및 포스트 불러오기
-onAuthStateChanged(auth, (user) => {
-  if (user) {
+  let currentUser = null;
+  onAuthStateChanged(auth, (user) => {
     currentUser = user;
-    postForm.style.display = "block";
-    loginPrompt.style.display = "none";
+    console.log("[Auth] 현재 사용자:", currentUser ? currentUser.email : "없음");
+    // 만약 상세보기 모드에 진입했고, 좋아요 체크가 아직 안 됐으면 재실행
+    if (postId && currentUser) checkUserLike(); 
+  });
+
+  // ─── 2. URL 파라미터 가져오기 헬퍼 ───────────────────────────────────────────────────────
+  function getParamFromURL(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  // ─── 3. DOM 요소 참조 ─────────────────────────────────────────────────────────────────────
+  const postId = getParamFromURL("id");                  // 상세보기 모드인지 판별
+  const boardParam = getParamFromURL("board") || "free"; // 없으면 기본 "free"
+
+  const postDetailContainer = document.getElementById("postDetail");      // 상세보기 영역
+  const boardSelectorSection = document.querySelector(".board-selector"); // 글쓰기 버튼만 있는 섹션
+  const writeForm = document.getElementById("writeForm");                // 글쓰기 폼 전체
+  const showWriteFormBtn = document.getElementById("showWriteForm");     // “글쓰기” 버튼
+  const communityHeader = document.querySelector(".community-header");    // 제목·정렬 버튼 섹션
+  const communityList = document.getElementById("communityList");         // 게시글 목록 영역
+  const boardTitle = document.getElementById("boardTitle");              // “자유게시판” 등 타이틀
+  const sortButtons = document.querySelectorAll(".sort-btn");            // 최신순/인기순 버튼들
+
+  // 요소가 제대로 선택되었는지 확인
+  console.log("[community.js] postDetailContainer:", postDetailContainer);
+  console.log("[community.js] boardSelectorSection:", boardSelectorSection);
+  console.log("[community.js] writeForm:", writeForm);
+  console.log("[community.js] showWriteFormBtn:", showWriteFormBtn);
+  console.log("[community.js] communityHeader:", communityHeader);
+  console.log("[community.js] communityList:", communityList);
+  console.log("[community.js] boardTitle:", boardTitle);
+  console.log("[community.js] sortButtons 개수:", sortButtons.length);
+
+  // ─── 4. 게시판 제목(boardTitle) 설정 ─────────────────────────────────────────────────────
+  boardTitle.textContent =
+    {
+      free: "자유게시판",
+      notice: "이벤트/공지",
+      archive: "자료실"
+    }[boardParam] || "자유게시판";
+  console.log("[community.js] boardParam:", boardParam);
+
+  // ─── 5. 상세보기 모드 분기 ──────────────────────────────────────────────────────────────────
+  if (postId) {
+    console.log("[community.js] 상세보기 모드 진입 (postId:", postId, ")");
+
+    // (A) 상세보기 모드일 때: 나머지 섹션 모두 숨기기
+    if (boardSelectorSection) boardSelectorSection.style.display = "none";
+    if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
+    if (writeForm) writeForm.style.display = "none";
+    if (communityHeader) communityHeader.style.display = "none";
+    if (communityList) communityList.style.display = "none";
+
+    // (B) 해당 게시글 데이터 가져오고 렌더링
+    getDoc(doc(db, "communityPosts", postId)).then(async (docSnap) => {
+      if (!docSnap.exists()) {
+        postDetailContainer.innerHTML = "<p>게시글을 찾을 수 없습니다.</p>";
+        return;
+      }
+
+      const data = docSnap.data();
+      console.log("[community.js] 상세 게시글 데이터:", data);
+
+      // 상세보기 화면 구성(메타정보 + 본문 + 좋아요 + 댓글 섹션)
+      postDetailContainer.innerHTML = `
+        <div class="post-meta">
+          <span>작성일: ${data.date}</span> |
+          <span>게시판: ${data.board}</span> |
+          <span>작성자: ${data.nickname}</span>
+        </div>
+        <h2 style="margin-top:1rem;">${data.title}</h2>
+        <div class="post-body" style="margin-top:1rem; line-height:1.6;">
+          ${data.detail}
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <button id="likeButton">❤️ 좋아요 (${data.likes})</button>
+        </div>
+
+        <hr style="margin:2rem 0;" />
+
+        <div id="commentsSection">
+          <h3>댓글</h3>
+          <div id="commentList"></div>
+          <textarea id="commentInput" placeholder="댓글을 입력하세요" style="width:100%; height:4rem; margin-top:0.5rem;"></textarea>
+          <button id="addCommentButton" style="margin-top:0.5rem;">댓글 작성</button>
+        </div>
+      `;
+
+      // ── 좋아요 버튼 로직(한 번만 가능) ────────────────────────────────────────────────────
+      const likeButton = document.getElementById("likeButton");
+      let userHasLiked = false;
+
+      // (1) 현재 사용자가 이미 좋아요했는지 확인 (likes 컬렉션)
+      async function checkUserLike() {
+        if (!currentUser) return;
+        console.log("[community.js] 좋아요 중복 체크 시작(postId, uid):", postId, currentUser.uid);
+        const likeQuery = query(
+          collection(db, "likes"),
+          where("postId", "==", postId),
+          where("uid", "==", currentUser.uid)
+        );
+        const likeSnap = await getDocs(likeQuery);
+        if (!likeSnap.empty) {
+          userHasLiked = true;
+          likeButton.disabled = true;
+          likeButton.textContent = "❤️ 이미 좋아요";
+          console.log("[community.js] 이미 좋아요 기록이 존재하여 버튼 비활성화");
+        }
+      }
+
+      // 현재 로그인 상태면 즉시 체크, 아니면 상태 변경 콜백에서 체크
+      if (currentUser) {
+        checkUserLike();
+      } else {
+        onAuthStateChanged(auth, (user) => {
+          currentUser = user;
+          if (user) checkUserLike();
+        });
+      }
+
+      // (2) 좋아요 클릭 시
+      likeButton?.addEventListener("click", async () => {
+        console.log("[community.js] 좋아요 버튼 클릭 시도");
+        if (!currentUser) {
+          alert("로그인이 필요합니다.");
+          return;
+        }
+        if (userHasLiked) {
+          alert("이미 좋아요를 누르셨습니다.");
+          return;
+        }
+        console.log("[community.js] 좋아요 처리: likes 컬렉션 추가 + communityPosts.likes 증가");
+
+        // (a) likes 컬렉션에 기록 추가
+        await addDoc(collection(db, "likes"), {
+          postId,
+          uid: currentUser.uid
+        });
+
+        // (b) communityPosts/{postId}.likes 필드 1 증가
+        const postRef = doc(db, "communityPosts", postId);
+        await updateDoc(postRef, { likes: increment(1) });
+
+        data.likes += 1;
+        userHasLiked = true;
+        likeButton.disabled = true;
+        likeButton.textContent = "❤️ 이미 좋아요를 누르셨습니다";
+      });
+
+      // ── 댓글 로딩 함수 ──────────────────────────────────────────────────────────────────
+      async function loadComments() {
+        console.log("[community.js] loadComments 호출");
+        const commentListEl = document.getElementById("commentList");
+        commentListEl.innerHTML = ""; // 초기화
+
+        const commentsQuery = query(collection(db, "comments"), where("postId", "==", postId));
+        const commentSnap = await getDocs(commentsQuery);
+        let comments = [];
+        commentSnap.forEach((cSnap) => {
+          comments.push({ id: cSnap.id, ...cSnap.data() });
+        });
+        // 작성일 오름차순 정렬
+        comments.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        if (comments.length === 0) {
+          commentListEl.innerHTML = "<p>댓글이 없습니다.</p>";
+          return;
+        }
+
+        comments.forEach((comment) => {
+          const div = document.createElement("div");
+          div.className = "comment-item";
+          div.style = "border-bottom:1px solid #ddd; padding:0.5rem 0;";
+
+          let commentHTML = `
+            <p style="margin:0;">
+              <strong>${comment.nickname}</strong>
+              <span style="color:#888; font-size:0.9rem; margin-left:0.5rem;">
+                ${comment.date}
+              </span>
+            </p>
+            <p id="commentText-${comment.id}" style="margin:0.3rem 0;">
+              ${comment.text}
+            </p>
+          `;
+
+          // 본인 댓글이면 수정/삭제 버튼 추가
+          if (currentUser && currentUser.uid === comment.uid) {
+            commentHTML += `
+              <button class="editCommentBtn" data-id="${comment.id}" style="font-size:0.8rem; margin-right:0.5rem;">
+                수정
+              </button>
+              <button class="deleteCommentBtn" data-id="${comment.id}" style="font-size:0.8rem;">
+                삭제
+              </button>
+            `;
+          }
+
+          div.innerHTML = commentHTML;
+          commentListEl.appendChild(div);
+
+          // 댓글 삭제 로직
+          if (currentUser && currentUser.uid === comment.uid) {
+            const deleteBtn = div.querySelector(`.deleteCommentBtn[data-id="${comment.id}"]`);
+            deleteBtn?.addEventListener("click", async () => {
+              if (!confirm("정말 이 댓글을 삭제하시겠습니까?")) return;
+              await deleteDoc(doc(db, "comments", comment.id));
+              loadComments();
+            });
+          }
+
+          // 댓글 수정 로직
+          if (currentUser && currentUser.uid === comment.uid) {
+            const editBtn = div.querySelector(`.editCommentBtn[data-id="${comment.id}"]`);
+            editBtn?.addEventListener("click", () => {
+              const originalTextEl = document.getElementById(`commentText-${comment.id}`);
+              const originalText = originalTextEl.textContent;
+              const editTextarea = document.createElement("textarea");
+              editTextarea.id = `editCommentInput-${comment.id}`;
+              editTextarea.style = "width:100%; height:3rem; margin:0.3rem 0;";
+              editTextarea.value = originalText;
+
+              const saveBtn = document.createElement("button");
+              saveBtn.textContent = "저장";
+              saveBtn.style = "font-size:0.8rem; margin-right:0.5rem;";
+
+              const cancelBtn = document.createElement("button");
+              cancelBtn.textContent = "취소";
+              cancelBtn.style = "font-size:0.8rem;";
+
+              const parentDiv = originalTextEl.parentElement;
+              parentDiv.replaceChild(editTextarea, originalTextEl);
+              parentDiv.querySelectorAll("button").forEach((b) => b.remove());
+              parentDiv.appendChild(saveBtn);
+              parentDiv.appendChild(cancelBtn);
+
+              saveBtn.addEventListener("click", async () => {
+                const newText = editTextarea.value.trim();
+                if (!newText) {
+                  alert("댓글 내용을 입력해주세요.");
+                  return;
+                }
+                await updateDoc(doc(db, "comments", comment.id), { text: newText });
+                loadComments();
+              });
+
+              cancelBtn.addEventListener("click", () => {
+                loadComments();
+              });
+            });
+          }
+        });
+      }
+
+      // 최초 댓글 로딩
+      loadComments();
+
+      // ── 댓글 추가 로직 ▽────────────────────────────────────────────────────────────────────────
+      const addCommentButton = document.getElementById("addCommentButton");
+      addCommentButton?.addEventListener("click", async () => {
+        console.log("[community.js] 댓글 작성 버튼 클릭");
+        if (!currentUser) {
+          alert("로그인이 필요합니다.");
+          return;
+        }
+        const commentInput = document.getElementById("commentInput");
+        const text = commentInput.value.trim();
+        if (!text) {
+          alert("댓글을 입력해주세요.");
+          return;
+        }
+
+        // users/{uid} 에서 닉네임 조회
+        async function getUserNickname(uid) {
+          const userDoc = await getDoc(doc(db, "users", uid));
+          return userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
+        }
+        const nickname = await getUserNickname(currentUser.uid);
+        const dateStr = new Date().toISOString().slice(0, 10);
+
+        await addDoc(collection(db, "comments"), {
+          postId,
+          uid: currentUser.uid,
+          nickname,
+          text,
+          date: dateStr
+        });
+
+        commentInput.value = "";
+        loadComments();
+      });
+    });
+
+    return; // 상세보기 모드이므로 목록·글쓰기 로직으로 내려가지 않음
+  }
+
+  // ─── 6. 목록 모드일 때(= postId가 없을 때) ─────────────────────────────────────────────────────
+  console.log("[community.js] 목록 모드 진입 (postId 없음)");
+  // (A) “글쓰기” 버튼 & 폼 노출 여부 결정
+  if (boardParam === "free") {
+    // 자유게시판 또는 이벤트/공지인 경우 버튼만 보이게 → 폼은 초기 hidden
+    if (writeForm) writeForm.style.display = "none";
+    if (showWriteFormBtn) showWriteFormBtn.style.display = "inline-block";
   } else {
-    currentUser = null;
-    postForm.style.display = "none";
-    loginPrompt.style.display = "block";
-  }
-  // 인증 상태가 변할 때마다 최신 글 목록을 다시 불러옵니다.
-  loadPosts();
-});
-
-// 2) 새 글 작성 이벤트
-postForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!currentUser) {
-    alert("로그인 후 글을 작성할 수 있습니다.");
-    return;
+    // 자료실 등인 경우 모두 숨김
+    if (showWriteFormBtn) showWriteFormBtn.style.display = "none";
+    if (writeForm) writeForm.style.display = "none";
   }
 
-  const title = postTitleInput.value.trim();
-  const body = postBodyInput.value.trim();
-  if (title === "" || body === "") {
-    alert("제목과 내용을 모두 입력하세요.");
-    return;
-  }
+  // (B) 글쓰기 폼 토글 및 제출 처리
+  showWriteFormBtn?.addEventListener("click", () => {
+    console.log("[community.js] 글쓰기 버튼 클릭 → 폼 토글");
+    writeForm.style.display = writeForm.style.display === "none" ? "block" : "none";
+  });
 
-  try {
-    await addDoc(collection(db, "posts"), {
-      title,
-      body,
-      uid: currentUser.uid,
-      authorName: currentUser.displayName || currentUser.email || "익명",
-      createdAt: serverTimestamp()
-    });
-    postForm.reset();
-    loadPosts();
-  } catch (error) {
-    console.error("새 글 작성 오류:", error);
-    alert("글 작성 중 오류가 발생했습니다.");
-  }
-});
-
-// 3) Firestore에서 모든 게시글을 가져와 렌더링
-async function loadPosts() {
-  postsContainer.innerHTML = ""; // 초기화
-
-  try {
-    // createdAt 기준 내림차순 정렬
-    const postsQuery = query(
-      collection(db, "posts"),
-      orderBy("createdAt", "desc")
-    );
-    const querySnapshot = await getDocs(postsQuery);
-
-    querySnapshot.forEach((docSnap) => {
-      const postData = docSnap.data();
-      const postId = docSnap.id;
-      renderPost(postId, postData);
-    });
-
-    if (querySnapshot.empty) {
-      postsContainer.innerHTML = "<p>아직 등록된 게시글이 없습니다.</p>";
-    }
-  } catch (error) {
-    console.error("게시글 불러오기 오류:", error);
-    postsContainer.innerHTML = "<p>게시글을 불러오는 중 오류가 발생했습니다.</p>";
-  }
-}
-
-// 4) 개별 게시글을 화면에 표시 + 수정/삭제 버튼 추가
-function renderPost(postId, postData) {
-  const postEl = document.createElement("div");
-  postEl.classList.add("post");
-  postEl.setAttribute("data-id", postId);
-
-  // 작성자와 날짜 표시
-  const infoEl = document.createElement("div");
-  infoEl.classList.add("post-info");
-  const date = postData.createdAt
-    ? postData.createdAt.toDate().toLocaleString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      })
-    : "날짜 없음";
-  infoEl.innerHTML = `<span class="author">${postData.authorName}</span> · <span class="date">${date}</span>`;
-
-  // 제목
-  const titleEl = document.createElement("h3");
-  titleEl.classList.add("post-title");
-  titleEl.textContent = postData.title;
-
-  // 본문
-  const bodyEl = document.createElement("p");
-  bodyEl.classList.add("post-body");
-  bodyEl.textContent = postData.body;
-
-  // 수정/삭제 버튼 컨테이너
-  const actionEl = document.createElement("div");
-  actionEl.classList.add("post-actions");
-
-  // 현재 로그인된 유저가 글 작성자일 때만 버튼 추가
-  if (currentUser && postData.uid === currentUser.uid) {
-    // 수정 버튼
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.classList.add("edit-btn");
-    editBtn.addEventListener("click", () => {
-      enableEditing(postId, postData, postEl);
-    });
-
-    // 삭제 버튼
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "삭제";
-    deleteBtn.classList.add("delete-btn");
-    deleteBtn.addEventListener("click", () => {
-      deletePost(postId);
-    });
-
-    actionEl.append(editBtn, deleteBtn);
-  }
-
-  // DOM 조립
-  postEl.append(infoEl, titleEl, bodyEl, actionEl);
-  postsContainer.appendChild(postEl);
-}
-
-// 5) 글 삭제 함수
-async function deletePost(postId) {
-  const confirmDelete = confirm("정말 이 글을 삭제하시겠습니까?");
-  if (!confirmDelete) return;
-
-  try {
-    await deleteDoc(doc(db, "posts", postId));
-    loadPosts();
-  } catch (error) {
-    console.error("삭제 오류:", error);
-    alert("게시글 삭제 중 오류가 발생했습니다.");
-  }
-}
-
-// 6) 글 수정 활성화 함수
-function enableEditing(postId, postData, postEl) {
-  // 기존 제목, 본문 요소 가져오기
-  const titleEl = postEl.querySelector(".post-title");
-  const bodyEl = postEl.querySelector(".post-body");
-  const actionEl = postEl.querySelector(".post-actions");
-
-  // 원본 값 저장
-  const originalTitle = postData.title;
-  const originalBody = postData.body;
-
-  // 6-1) 입력 폼 생성
-  const titleInput = document.createElement("input");
-  titleInput.type = "text";
-  titleInput.value = originalTitle;
-  titleInput.classList.add("edit-title-input");
-
-  const bodyTextarea = document.createElement("textarea");
-  bodyTextarea.rows = 5;
-  bodyTextarea.classList.add("edit-body-textarea");
-  bodyTextarea.value = originalBody;
-
-  // 6-2) 저장/취소 버튼 생성
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "저장";
-  saveBtn.classList.add("save-btn");
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "취소";
-  cancelBtn.classList.add("cancel-btn");
-
-  // 6-3) 클릭 시 동작 정의
-  saveBtn.addEventListener("click", async () => {
-    const newTitle = titleInput.value.trim();
-    const newBody = bodyTextarea.value.trim();
-    if (newTitle === "" || newBody === "") {
-      alert("제목과 내용을 모두 입력하세요.");
+  writeForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("[community.js] 글쓰기 폼 제출 시도");
+    if (!currentUser) {
+      alert("로그인이 필요합니다.");
       return;
     }
 
-    try {
-      await updateDoc(doc(db, "posts", postId), {
-        title: newTitle,
-        body: newBody
-      });
-      loadPosts();
-    } catch (error) {
-      console.error("수정 저장 오류:", error);
-      alert("게시글 수정 중 오류가 발생했습니다.");
+    const title = document.getElementById("writeTitle").value.trim();
+    const summary = document.getElementById("writeBody").value.trim();
+    const detail = document.getElementById("postDetailInput").value.trim();
+    const board = document.getElementById("writeBoard").value;
+
+    if (!title || !summary || !detail) {
+      alert("제목, 줄거리, 본문을 모두 입력해주세요.");
+      return;
     }
-  });
 
-  cancelBtn.addEventListener("click", () => {
-    // 수정 취소 시 원래 상태로 복구
-    titleEl.textContent = originalTitle;
-    bodyEl.textContent = originalBody;
-    actionEl.innerHTML = "";
-    // 수정/삭제 버튼 다시 렌더링
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.classList.add("edit-btn");
-    editBtn.addEventListener("click", () => {
-      enableEditing(postId, postData, postEl);
+    // users/{uid} 에서 닉네임 조회
+    async function getUserNickname(uid) {
+      const userDoc = await getDoc(doc(db, "users", uid));
+      return userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
+    }
+    const nickname = await getUserNickname(currentUser.uid);
+    const dateStr = new Date().toISOString().slice(0, 10);
+
+    await addDoc(collection(db, "communityPosts"), {
+      title,
+      summary,
+      detail,
+      board,
+      date: dateStr,
+      likes: 0,
+      nickname,
+      uid: currentUser.uid
     });
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "삭제";
-    deleteBtn.classList.add("delete-btn");
-    deleteBtn.addEventListener("click", () => {
-      deletePost(postId);
-    });
-
-    actionEl.append(editBtn, deleteBtn);
+    alert("게시글이 등록되었습니다.");
+    location.href = `community.html?board=${board}`;
   });
 
-  // 6-4) DOM 교체: 텍스트 요소 → 입력 폼
-  postEl.replaceChild(titleInput, titleEl);
-  postEl.replaceChild(bodyTextarea, bodyEl);
-  actionEl.innerHTML = "";
-  actionEl.append(saveBtn, cancelBtn);
-}
+  // (C) 게시글 목록 불러오기 & 렌더링 함수 정의
+  async function loadPosts(board, sort = "latest") {
+    console.log("[community.js] loadPosts 호출, board:", board, "sort:", sort);
+    communityList.innerHTML = "";
+
+    const q = query(collection(db, "communityPosts"), where("board", "==", board));
+    const snapshot = await getDocs(q);
+
+    let posts = [];
+    snapshot.forEach((docSnap) => {
+      posts.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // 정렬: 인기순 vs 최신순
+    posts.sort((a, b) => {
+      if (sort === "popular") {
+        return b.likes - a.likes;
+      } else {
+        return new Date(b.date) - new Date(a.date);
+      }
+    });
+
+    if (posts.length === 0) {
+      communityList.innerHTML = "<p>게시글이 없습니다.</p>";
+      return;
+    }
+
+    posts.forEach((post) => {
+      const div = document.createElement("div");
+      div.className = "post-item";
+      div.innerHTML = `
+        <h3>
+          <a href="community.html?id=${post.id}&board=${board}">${post.title}</a>
+        </h3>
+        <p>${post.summary}</p>
+        <div class="meta">
+          ${post.date} | ${post.nickname} | ❤️ ${post.likes}
+        </div>
+      `;
+      communityList.appendChild(div);
+    });
+  }
+
+  // (D) 정렬 버튼 초기화 & 이벤트 연결
+  let currentSort = "latest";
+  sortButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sortButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentSort = btn.dataset.sort;
+      loadPosts(boardParam, currentSort);
+    });
+  });
+
+  // (E) 최초 로드: 게시판 목록 렌더링
+  loadPosts(boardParam, currentSort);
+});
