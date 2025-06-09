@@ -5,6 +5,56 @@
   <title>홈 | 괴담지옥</title>
   <link rel="stylesheet" href="style.css" />
   <script type="module" src="main.js"></script>
+  <script type="module">
+    import { urbanData } from './urban.js';
+    import './main.js';
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const slider = document.getElementById('homeSlider');
+      if (slider && urbanData) {
+        const sorted = [...urbanData].sort((a, b) => b.likes - a.likes).slice(0, 5);
+        slider.innerHTML = sorted.map(item => `
+          <div class="product-card" data-id="${item.id}">
+            <img src="${item.thumb}" alt="${item.title}">
+            <div class="product-title">${item.title}</div>
+            <div class="rating">${'★'.repeat(item.level)}${'☆'.repeat(5 - item.level)}</div>
+            <div class="product-price">좋아요 ${item.likes}개</div>
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.product-card').forEach(card => {
+          card.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            window.location.href = `urban.html?id=${id}`;
+          });
+        });
+
+        let idx = 0;
+        const visible = 2.3;
+
+        function updateSlider() {
+          const card = slider.querySelector('.product-card');
+          const cardWidth = card ? card.offsetWidth + 32 : 260;
+          slider.style.transform = `translateX(${-idx * cardWidth}px)`;
+        }
+
+        document.getElementById('sliderPrev').onclick = function () {
+          idx = Math.max(0, idx - 1);
+          updateSlider();
+        };
+
+        document.getElementById('sliderNext').onclick = function () {
+          const card = slider.querySelector('.product-card');
+          const cardWidth = card ? card.offsetWidth + 32 : 260;
+          const maxIdx = Math.max(0, slider.children.length - Math.ceil(visible));
+          idx = Math.min(maxIdx, idx + 1);
+          updateSlider();
+        };
+
+        updateSlider();
+      }
+    });
+  </script>
 </head>
 <body>
   <header>
@@ -65,14 +115,14 @@
     </div>
   </section>
 
-  <!-- 인기 괴담 슬라이더 영역 -->
+  <!-- 인기 곰달 슬라이더 영역 -->
   <section class="main-section" id="popularSection">
     <h2 class="slider-title">인기 괴담</h2>
     <div class="slider-area">
       <div class="slider-arrow" id="sliderPrev">&lt;</div>
       <div class="product-slider-wrapper">
         <div class="product-slider" id="homeSlider">
-          <!-- JS로 카드 삽입 -->
+          <!-- JS로 카드 생성 -->
         </div>
       </div>
       <div class="slider-arrow" id="sliderNext">&gt;</div>
