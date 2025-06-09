@@ -1,11 +1,18 @@
 // ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가) + 오디오 기능
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import {
   getFirestore, doc, getDoc, updateDoc,
   collection, addDoc, getDocs, deleteDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
@@ -186,14 +193,16 @@ function renderUrbanDetail(id) {
   const titleElem = document.querySelector('.urban-title');
   if (titleElem) titleElem.textContent = data.title;
 
+  // 상세 뷰 HTML + 오디오 버튼 & <audio> 태그 포함
   urbanList.innerHTML = `
     <div class="product-card urban-item urban-detail" style="width:100%;max-width:1200px;margin:0 auto; position: relative;">
+      <!-- 음성 모드 버튼 -->
       <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
         <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
           🎧 음성 모드
         </button>
         <audio id="urbanVoiceAudio" style="display:none; margin-top:0.5rem; width:100%;">
-          <source src="urban${id}.mp3" type="audio/mpeg">
+          <source src="audio/urban${id}.mp3" type="audio/mpeg">
           브라우저가 오디오를 지원하지 않습니다.
         </audio>
       </div>
@@ -223,15 +232,19 @@ function renderUrbanDetail(id) {
     </div>
   `;
 
+  // “목록으로” 클릭 시 뒤로가기
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
     window.history.back();
   });
 
+  // 좋아요·댓글 기능 초기화
   setupLikeButton(id);
   setupCommentSection(id);
 
+  // —— 오디오 기능 로직 —— //
   const playBtn = document.getElementById('playVoiceBtn');
   const audioEl = document.getElementById('urbanVoiceAudio');
+  // localStorage에 저장된 상태 불러오기 (on/off)
   let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
 
   function updateVoiceState(play) {
@@ -249,8 +262,10 @@ function renderUrbanDetail(id) {
     }
   }
 
+  // 상세 진입 시 저장된 상태로 초기값 반영
   updateVoiceState(voicePlaying);
 
+  // 버튼 클릭 시 토글
   playBtn.addEventListener('click', () => {
     voicePlaying = !voicePlaying;
     updateVoiceState(voicePlaying);
@@ -311,6 +326,41 @@ export const urbanData = [
     detail: `어릴 적 시골집에서 혼자 잠을 자는데 누군가 이불을 잡아당기는 느낌이 들었습니다. 눈을 떠보니 아무도 없었고, 이불은 그대로였습니다. [...]`
   }
 ];
+
+function renderUrbanList(sortType, filterType) {
+  let list = [...urbanData];
+  if (filterType && filterType !== 'all') {
+    list = list.filter(item => item.filter === filterType);
+  }
+  if (sortType === 'latest') {
+    list.sort((a, b) => b.date.localeCompare(a.date));
+  } else if (sortType === 'popular') {
+    list.sort((a, b) => b.likes - a.likes);
+  } else if (sortType === 'level') {
+    list.sort((a, b) => b.level - a.level);
+  }
+
+  const urbanList = document.getElementById('urbanList');
+  urbanList.innerHTML = list.map(item => `
+    <div class="product-card urban-item" data-id="${item.id}" style="cursor:pointer;">
+      <img src="${item.thumb}" alt="${item.title}">
+      <div class="urban-item-title" style="margin-bottom:0.5rem;">${item.title}</div>
+      <div class="urban-item-meta" style="margin-bottom:0.4rem;">
+        <span>좋아요 ${item.likes}개</span>
+        <span>${item.date}</span>
+      </div>
+      <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.urban-item').forEach(itemElem => {
+    itemElem.addEventListener('click', function () {
+      const clickId = this.getAttribute('data-id');
+      window.history.pushState({}, '', `?id=${clickId}`);
+      renderUrbanDetail(parseInt(clickId, 10));
+    });
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('urbanList')) {
