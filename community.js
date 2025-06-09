@@ -111,6 +111,63 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="post-body" style="margin-top:1rem; line-height:1.6;">
           ${data.detail}
         </div>
+        // ─── 게시글 수정/삭제 버튼 (본인 게시글일 경우) ──────────────────────────────
+if (currentUser && currentUser.uid === data.uid) {
+  const controlDiv = document.createElement("div");
+  controlDiv.style = "margin-top: 1.5rem;";
+  controlDiv.innerHTML = `
+    <button id="editPostBtn" style="margin-right:1rem;">✏️ 게시글 수정</button>
+    <button id="deletePostBtn">🗑️ 게시글 삭제</button>
+  `;
+  postDetailContainer.appendChild(controlDiv);
+
+  // 게시글 삭제
+  document.getElementById("deletePostBtn").addEventListener("click", async () => {
+    const confirmed = confirm("정말 이 게시글을 삭제하시겠습니까?");
+    if (!confirmed) return;
+    await deleteDoc(doc(db, "communityPosts", postId));
+    alert("게시글이 삭제되었습니다.");
+    location.href = `community.html?board=${data.board}`;
+  });
+
+  // 게시글 수정
+  document.getElementById("editPostBtn").addEventListener("click", () => {
+    postDetailContainer.innerHTML = `
+      <div class="post-meta">
+        <span>작성일: ${data.date}</span> |
+        <span>게시판: ${data.board}</span> |
+        <span>작성자: ${data.nickname}</span>
+      </div>
+      <input id="editTitle" type="text" value="${data.title}" style="width:100%; margin-top:1rem; font-size:1.2rem;" />
+      <textarea id="editDetail" style="width:100%; height:10rem; margin-top:1rem;">${data.detail}</textarea>
+      <div style="margin-top:1rem;">
+        <button id="saveEditBtn" style="margin-right:0.5rem;">저장</button>
+        <button id="cancelEditBtn">취소</button>
+      </div>
+    `;
+
+    document.getElementById("saveEditBtn").addEventListener("click", async () => {
+      const newTitle = document.getElementById("editTitle").value.trim();
+      const newDetail = document.getElementById("editDetail").value.trim();
+      if (!newTitle || !newDetail) {
+        alert("제목과 본문을 모두 입력해주세요.");
+        return;
+      }
+
+      await updateDoc(doc(db, "communityPosts", postId), {
+        title: newTitle,
+        detail: newDetail
+      });
+
+      alert("수정이 완료되었습니다.");
+      location.reload();
+    });
+
+    document.getElementById("cancelEditBtn").addEventListener("click", () => {
+      location.reload();
+    });
+  });
+}
 
         <div style="margin-top:1.5rem;">
           <button id="likeButton">❤️ 좋아요 (${data.likes})</button>
