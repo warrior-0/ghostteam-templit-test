@@ -322,11 +322,6 @@ export const urbanData = [
   }
 ];
 
-urbanData.forEach(async (story) => {
-  await setDoc(doc(db, "urbanStories", String(story.id)), story);
-  console.log(`등록됨: ${story.title}`);
-});
-
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('urbanList')) {
     let sortType = 'latest';
