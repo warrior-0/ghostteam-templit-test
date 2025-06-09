@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("[community.js] boardTitle:", boardTitle);
   console.log("[community.js] sortButtons 개수:", sortButtons.length);
 
+  
   // ─── 4. 게시판 제목(boardTitle) 설정 ─────────────────────────────────────────────────────
   boardTitle.textContent =
     {
