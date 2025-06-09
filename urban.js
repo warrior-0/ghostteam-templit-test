@@ -321,6 +321,12 @@ export const urbanData = [
     detail: `어릴 적 시골집에서 혼자 잠을 자는데 누군가 이불을 잡아당기는 느낌이 들었습니다. 눈을 떠보니 아무도 없었고, 이불은 그대로였습니다. [...]`
   }
 ];
+
+urbanData.forEach(async (story) => {
+  await setDoc(doc(db, "urbanStories", String(story.id)), story);
+  console.log(`등록됨: ${story.title}`);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('urbanList')) {
     let sortType = 'latest';
