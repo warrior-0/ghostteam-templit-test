@@ -284,7 +284,6 @@ export const urbanData = [
   {
     id: 1,
     title: '층간소음',
-    likes: 13,
     date: '2025-05-20',
     filter: 'korea',
     level: 4,
@@ -295,7 +294,6 @@ export const urbanData = [
   {
     id: 2,
     title: '하나코야 놀자',
-    likes: 25,
     date: '2025-05-18',
     filter: 'foreign',
     level: 4,
@@ -306,7 +304,6 @@ export const urbanData = [
   {
     id: 3,
     title: '장충동 목욕탕 살인사건',
-    likes: 9,
     date: '2025-05-21',
     filter: 'true',
     level: 5,
@@ -317,7 +314,6 @@ export const urbanData = [
   {
     id: 4,
     title: '졸음운전',
-    likes: 18,
     date: '2025-05-19',
     filter: 'user',
     level: 1,
