@@ -102,11 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 상세보기 화면 구성(메타정보 + 본문 + 좋아요 + 댓글 섹션)
       postDetailContainer.innerHTML = `
-        <div class="post-meta">
-          <span>작성일: ${data.date}</span> |
-          <span>게시판: ${data.board}</span> |
-          <span>작성자: ${data.nickname}</span>
-        </div>
         <h2 style="margin-top:1rem;">${data.title}</h2>
         <div class="post-body" style="margin-top:1rem; line-height:1.6;">
           ${data.detail}
@@ -116,8 +111,8 @@ if (currentUser && currentUser.uid === data.uid) {
   const controlDiv = document.createElement("div");
   controlDiv.style = "margin-top: 1.5rem;";
   controlDiv.innerHTML = `
-    <button id="editPostBtn" style="margin-right:1rem;">✏️ 게시글 수정</button>
-    <button id="deletePostBtn">🗑️ 게시글 삭제</button>
+    <button id="editPostBtn" style="margin-right:1rem;">수정</button>
+    <button id="deletePostBtn">삭제</button>
   `;
   postDetailContainer.appendChild(controlDiv);
 
