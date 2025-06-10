@@ -327,6 +327,11 @@ export const urbanData = [
   }
 ];
 
+urbanData.forEach(async (story) => {More actions
+  await setDoc(doc(db, "urbanStories", String(story.id)), story);
+  console.log(`등록됨: ${story.title}`);More actions
+});
+
 function renderUrbanList(sortType, filterType) {
   let list = [...urbanData];
   if (filterType && filterType !== 'all') {
