@@ -50,9 +50,9 @@ function renderLevelStars(level) {
 }
 
 function setupLikeButton(postId) {
-  const likeBtn = document.getElementById('likeBtn');
+  const likeBtn   = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
-  const item = urbanData.find(item => item.id === postId);
+  const item      = urbanData.find(item => item.id === postId);
 
   if (!likeBtn || !likeCount) return;
 
@@ -68,17 +68,44 @@ function setupLikeButton(postId) {
         return;
       }
       const uid = currentUser.uid;
-      const alreadyLiked = data.users?.includes(uid);
-
-      if (alreadyLiked) {
+      if (data.users.includes(uid)) {
         alert('이미 좋아요를 누르셨습니다');
         return;
       }
 
+      // — Firebase에 저장
       data.count = (data.count || 0) + 1;
-      data.users = [...(data.users || []), uid];
+      data.users.push(uid);
       await setDoc(postRef, data);
+
+      // — 상세 페이지 좋아요 카운트 갱신
       likeCount.textContent = data.count;
+
+      // — 로컬 urbanData 배열 갱신
+      if (item) {
+        item.likes = data.count;
+      }
+
+      // — GitHub 리포지토리의 urban.js 파일 갱신 요청
+      fetch('/api/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: postId })
+      })
+      .then(res => res.json())
+      .then(result => {
+        if (!result.success) {
+          console.error('urban.js 업데이트 실패:', result.error);
+        }
+      })
+      .catch(err => console.error('업데이트 중 에러:', err));
+
+      // — 리스트 뷰 카드 DOM만 부분 업데이트
+      const card = document.querySelector(`.urban-item[data-id="${postId}"]`);
+      if (card) {
+        const [likeSpan] = card.querySelectorAll('.urban-item-meta span');
+        likeSpan.textContent = `좋아요 ${data.count}개`;
+      }
     });
   });
 }
