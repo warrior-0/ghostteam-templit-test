@@ -11,8 +11,8 @@ app.use(bodyParser.json());
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 // 리포지토리 설정
-const OWNER  = 'YOUR_GITHUB_USERNAME';
-const REPO   = 'YOUR_REPO_NAME';
+const OWNER  = 'warrior-0';
+const REPO   = 'ghostteam-templit-test';
 const BRANCH = 'main';
 const FILE_PATH = 'urban.js';  // 리포지토리 루트에 urban.js 가 있을 때
 
