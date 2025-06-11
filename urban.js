@@ -50,9 +50,8 @@ function renderLevelStars(level) {
 }
 
 function setupLikeButton(postId) {
-  const likeBtn   = document.getElementById('likeBtn');
+  const likeBtn = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
-  const item      = urbanData.find(item => item.id === postId);
 
   if (!likeBtn || !likeCount) return;
 
@@ -68,44 +67,18 @@ function setupLikeButton(postId) {
         return;
       }
       const uid = currentUser.uid;
-      if (data.users.includes(uid)) {
+      const alreadyLiked = data.users?.includes(uid);
+
+      if (alreadyLiked) {
         alert('이미 좋아요를 누르셨습니다');
         return;
       }
 
-      // — Firebase에 저장
       data.count = (data.count || 0) + 1;
-      data.users.push(uid);
+      data.users = [...(data.users || []), uid];
+
       await setDoc(postRef, data);
-
-      // — 상세 페이지 좋아요 카운트 갱신
       likeCount.textContent = data.count;
-
-      // — 로컬 urbanData 배열 갱신
-      if (item) {
-        item.likes = data.count;
-      }
-
-      // — GitHub 리포지토리의 urban.js 파일 갱신 요청
-      fetch('/api/like', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: postId })
-      })
-      .then(res => res.json())
-      .then(result => {
-        if (!result.success) {
-          console.error('urban.js 업데이트 실패:', result.error);
-        }
-      })
-      .catch(err => console.error('업데이트 중 에러:', err));
-
-      // — 리스트 뷰 카드 DOM만 부분 업데이트
-      const card = document.querySelector(`.urban-item[data-id="${postId}"]`);
-      if (card) {
-        const [likeSpan] = card.querySelectorAll('.urban-item-meta span');
-        likeSpan.textContent = `좋아요 ${data.count}개`;
-      }
     });
   });
 }
@@ -311,7 +284,7 @@ export const urbanData = [
   {
     id: 1,
     title: '층간소음',
-    likes: 0,
+    likes: 13,
     date: '2025-05-20',
     filter: 'korea',
     level: 4,
@@ -395,7 +368,7 @@ export const urbanData = [
   {
     id: 2,
     title: '하나코야 놀자',
-    likes: 0,
+    likes: 25,
     date: '2025-05-18',
     filter: 'foreign',
     level: 4,
@@ -481,7 +454,7 @@ export const urbanData = [
   {
     id: 3,
     title: '장충동 목욕탕 살인사건',
-    likes: 0,
+    likes: 9,
     date: '2025-05-21',
     filter: 'true',
     level: 5,
@@ -492,7 +465,7 @@ export const urbanData = [
   {
     id: 4,
     title: '졸음운전',
-    likes: 0,
+    likes: 18,
     date: '2025-05-19',
     filter: 'user',
     level: 1,
