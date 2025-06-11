@@ -33,16 +33,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUser = null;
   onAuthStateChanged(auth, user => {
     currentUser = user;
-    // 상세 모드에서 좋아요 중복 체크 재실행
-    if (postId && currentUser) checkUserLike();
-    if (postId) loadComments();
+    // 상세보기 모드라면 작성자 체크 및 액션 재실행
+    if (postId) {
+      checkUserLike();
+      loadComments();
+      renderActions();
+    }
   });
 
   // ─── 2. URL 파라미터 헬퍼 ───────────────────────────────────────────────────────────
   function getParamFromURL(name) {
     return new URLSearchParams(window.location.search).get(name);
   }
-
   const postId = getParamFromURL("id");
   const boardParam = getParamFromURL("board") || "free";
 
@@ -76,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const data = snap.data();
+
+      // 상세 HTML 구성 (수정·삭제 버튼은 별도 div에 그릴 예정)
       postDetailContainer.innerHTML = `
         <div class="post-meta">
           <span>작성일: ${data.date}</span> |
@@ -96,7 +100,13 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-      // 좋아요 버튼 로직
+      // ── 5-1. 수정·삭제 버튼 영역 추가 ──────────────────────────────────────────────
+      const actionsDiv = document.createElement("div");
+      actionsDiv.id = "postActions";
+      actionsDiv.style.margin = "1.5rem 0";
+      postDetailContainer.insertBefore(actionsDiv, postDetailContainer.querySelector("hr"));
+
+      // ── 5-2. 좋아요 버튼 로직 ────────────────────────────────────────────────────
       const likeButton = document.getElementById("likeButton");
       let userHasLiked = false;
 
@@ -128,14 +138,87 @@ document.addEventListener("DOMContentLoaded", () => {
         likeButton.textContent = "❤️ 이미 좋아요를 누르셨습니다";
       });
 
-      // 댓글 로드/관리 함수
+      // ── 5-3. 수정·삭제 버튼 렌더링 & 이벤트 바인딩 ───────────────────────────────
+      function renderActions() {
+        const actionsDiv = document.getElementById("postActions");
+        if (!currentUser) return;
+        // 작성자 본인일 때만 버튼 표시
+        if (currentUser.uid === data.uid) {
+          actionsDiv.innerHTML = `
+            <button id="editPostBtn">게시글 수정</button>
+            <button id="deletePostBtn">게시글 삭제</button>
+          `;
+
+          // 삭제
+          document.getElementById("deletePostBtn").addEventListener("click", async () => {
+            if (confirm("게시글을 삭제하시겠습니까?")) {
+              await deleteDoc(doc(db, "communityPosts", postId));
+              alert("삭제되었습니다.");
+              location.href = `community.html?board=${boardParam}`;
+            }
+          });
+
+          // 수정
+          document.getElementById("editPostBtn").addEventListener("click", () => {
+            // 기존 제목/내용 요소 가져오기
+            const titleEl = postDetailContainer.querySelector("h2");
+            const detailEl = postDetailContainer.querySelector(".post-body");
+
+            // 입력 폼 요소 생성
+            const titleInput = document.createElement("input");
+            titleInput.type = "text";
+            titleInput.value = data.title;
+            titleInput.style.width = "100%";
+            titleInput.style.margin = "0.5rem 0";
+
+            const detailTextarea = document.createElement("textarea");
+            detailTextarea.value = data.detail;
+            detailTextarea.style.width = "100%";
+            detailTextarea.style.height = "200px";
+            detailTextarea.style.margin = "0.5rem 0";
+
+            // 화면에 교체
+            titleEl.replaceWith(titleInput);
+            detailEl.replaceWith(detailTextarea);
+
+            // 저장/취소 버튼으로 바꾸기
+            actionsDiv.innerHTML = `
+              <button id="savePostBtn">저장</button>
+              <button id="cancelEditBtn">취소</button>
+            `;
+
+            // 저장
+            document.getElementById("savePostBtn").addEventListener("click", async () => {
+              const newTitle = titleInput.value.trim();
+              const newDetail = detailTextarea.value.trim();
+              if (!newTitle || !newDetail) return alert("제목과 내용을 입력해주세요.");
+              await updateDoc(doc(db, "communityPosts", postId), {
+                title: newTitle,
+                detail: newDetail
+              });
+              alert("수정되었습니다.");
+              location.reload();
+            });
+
+            // 취소
+            document.getElementById("cancelEditBtn").addEventListener("click", () => {
+              location.reload();
+            });
+          });
+        }
+      }
+
+      // 최초 렌더
+      renderActions();
+
+      // ── 5-4. 댓글 로드/관리 함수 ────────────────────────────────────────────────
       async function loadComments() {
         const listEl = document.getElementById("commentList");
         listEl.innerHTML = "";
         const cQ = query(collection(db, "comments"), where("postId", "==", postId));
         const cSnap = await getDocs(cQ);
         const comments = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        comments.sort((a,b) => new Date(a.date) - new Date(b.date));
+        comments.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         if (!comments.length) {
           listEl.innerHTML = "<p>댓글이 없습니다.</p>";
@@ -168,8 +251,10 @@ document.addEventListener("DOMContentLoaded", () => {
               const textEl = document.getElementById(`commentText-${c.id}`);
               const ta = document.createElement("textarea");
               ta.value = c.text;
-              const save = document.createElement("button"); save.textContent = "저장";
-              const cancel = document.createElement("button"); cancel.textContent = "취소";
+              const save = document.createElement("button");
+              save.textContent = "저장";
+              const cancel = document.createElement("button");
+              cancel.textContent = "취소";
               textEl.replaceWith(ta);
               btns.replaceWith(save);
               save.after(cancel);
@@ -197,12 +282,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!text) return alert("댓글을 입력해주세요.");
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         const nickname = userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
-        const date = new Date().toISOString().slice(0,10);
+        const date = new Date().toISOString().slice(0, 10);
         await addDoc(collection(db, "comments"), { postId, uid: currentUser.uid, nickname, text, date });
         ta.value = "";
         loadComments();
       });
     });
+
     return;
   }
 
@@ -225,39 +311,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const summary = document.getElementById("writeBody").value.trim();
     const detail = document.getElementById("postDetailInput").value.trim();
     const board = document.getElementById("writeBoard").value;
-    if (!title||!summary||!detail) return alert("모든 필드를 입력해주세요.");
+    if (!title || !summary || !detail) return alert("모든 필드를 입력해주세요.");
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    const nickname = userDoc.exists() ? userDoc.data().nickname||"익명" : "익명";
-    const date = new Date().toISOString().slice(0,10);
-    await addDoc(collection(db, "communityPosts"), { title, summary, detail, board, date, likes:0, nickname, uid: currentUser.uid });
+    const nickname = userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
+    const date = new Date().toISOString().slice(0, 10);
+    await addDoc(collection(db, "communityPosts"), {
+      title, summary, detail, board, date, likes: 0, nickname, uid: currentUser.uid
+    });
     alert("게시글이 등록되었습니다.");
     location.href = `community.html?board=${board}`;
   });
 
-  async function loadPosts(board, sort="latest") {
+  async function loadPosts(board, sort = "latest") {
     communityList.innerHTML = "";
-    const q = query(collection(db, "communityPosts"), where("board","==",board));
+    const q = query(collection(db, "communityPosts"), where("board", "==", board));
     const snap = await getDocs(q);
-    let posts = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    posts.sort((a,b)=>(sort==='popular'?b.likes-a.likes:new Date(b.date)-new Date(a.date)));
+    let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    posts.sort((a, b) =>
+      sort === 'popular' ? b.likes - a.likes : new Date(b.date) - new Date(a.date)
+    );
     if (!posts.length) return communityList.innerHTML = "<p>게시글이 없습니다.</p>";
-    posts.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="post-item";
-      div.innerHTML=`<h3><a href="community.html?id=${p.id}&board=${board}">${p.title}</a></h3>
+    posts.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "post-item";
+      div.innerHTML = `
+        <h3><a href="community.html?id=${p.id}&board=${board}">${p.title}</a></h3>
         <p>${p.summary}</p>
-        <div class="meta">${p.date} | ${p.nickname} | ❤️ ${p.likes}</div>`;
+        <div class="meta">${p.date} | ${p.nickname} | ❤️ ${p.likes}</div>
+      `;
       communityList.appendChild(div);
     });
   }
 
   let currentSort = "latest";
-  sortButtons.forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      sortButtons.forEach(b=>b.classList.remove("active"));
+  sortButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      sortButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentSort = btn.dataset.sort;
-      loadPosts(boardParam,currentSort);
+      loadPosts(boardParam, currentSort);
     });
   });
 
