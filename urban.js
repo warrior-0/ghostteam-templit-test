@@ -209,7 +209,7 @@ function renderUrbanDetail(id) {
           🎧 음성 모드
         </button>
         <audio id="urbanVoiceAudio" style="display:none; margin-top:0.5rem; width:100%;">
-          <source src="/audio/urban${id}.mp3" type="audio/mpeg">
+          <source src="audio/urban${id}.mp3" type="audio/mpeg">
           브라우저가 오디오를 지원하지 않습니다.
         </audio>
       </div>
