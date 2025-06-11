@@ -475,17 +475,34 @@ export const urbanData = [
   }
 ];
 
+async function getLikeCount(postId) {
+  const postRef = doc(db, "urbanLikes", String(postId));
+  const docSnap = await getDoc(postRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return data.count || 0;
+  } else {
+    return 0;
+  }
+}
+
+
 function renderUrbanList(sortType, filterType) {
   let list = [...urbanData];
   if (filterType && filterType !== 'all') {
     list = list.filter(item => item.filter === filterType);
   }
+
+  // 좋아요 수 포함한 객체 배열로 변환
+  const listWithLikes = await Promise.all(list.map(async item => {
+    const likeCount = await getLikeCount(item.id);
+    return { ...item, likeCount };
+  }));
+
   if (sortType === 'latest') {
-    list.sort((a, b) => b.date.localeCompare(a.date));
+    listWithLikes.sort((a, b) => new Date(b.date) - new Date(a.date));
   } else if (sortType === 'popular') {
-    list.sort((a, b) => b.likes - a.likes);
-  } else if (sortType === 'level') {
-    list.sort((a, b) => b.level - a.level);
+    listWithLikes.sort((a, b) => b.likeCount - a.likeCount);
   }
 
   const urbanList = document.getElementById('urbanList');
@@ -494,7 +511,7 @@ function renderUrbanList(sortType, filterType) {
       <img src="${item.thumb}" alt="${item.title}">
       <div class="urban-item-title" style="margin-bottom:0.5rem;">${item.title}</div>
       <div class="urban-item-meta" style="margin-bottom:0.4rem;">
-        <span>좋아요 ${item.likes}개</span>
+        <span>좋아요 ${story.likeCount}개</span>
         <span>${item.date}</span>
       </div>
       <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
