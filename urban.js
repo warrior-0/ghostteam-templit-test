@@ -1,14 +1,17 @@
-// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가) + 오디오 기능
-
+// urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가) + 오디오 기능
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-  getFirestore, doc, getDoc, updateDoc,
-  collection, addDoc, getDocs, deleteDoc, setDoc
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  setDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 import {
   getAuth,
   onAuthStateChanged
@@ -52,7 +55,6 @@ function renderLevelStars(level) {
 function setupLikeButton(postId) {
   const likeBtn = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
-
   if (!likeBtn || !likeCount) return;
 
   const postRef = doc(db, 'urbanLikes', String(postId));
@@ -68,15 +70,12 @@ function setupLikeButton(postId) {
       }
       const uid = currentUser.uid;
       const alreadyLiked = data.users?.includes(uid);
-
       if (alreadyLiked) {
         alert('이미 좋아요를 누르셨습니다');
         return;
       }
-
       data.count = (data.count || 0) + 1;
       data.users = [...(data.users || []), uid];
-
       await setDoc(postRef, data);
       likeCount.textContent = data.count;
     });
@@ -87,8 +86,7 @@ async function getUserNickname(uid) {
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
-      const data = userDoc.data();
-      return data.nickname || '익명';
+      return userDoc.data().nickname || '익명';
     }
   } catch (err) {
     console.warn('닉네임 조회 실패:', err);
@@ -99,8 +97,7 @@ async function getUserNickname(uid) {
 async function loadComments(postId) {
   const commentList = document.getElementById('commentList');
   commentList.innerHTML = '';
-  const q = collection(db, 'urbanComments');
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(collection(db, 'urbanComments'));
   const filtered = [];
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
@@ -174,7 +171,6 @@ function setupCommentSection(postId) {
         text,
         timestamp: Date.now()
       });
-
       input.value = '';
       loadComments(postId);
     } catch (e) {
@@ -186,6 +182,17 @@ function setupCommentSection(postId) {
   loadComments(postId);
 }
 
+// --- Firebase에서 좋아요 개수 한 번에 가져오는 유틸 함수 추가 ---
+async function fetchAllLikes() {
+  const snapshot = await getDocs(collection(db, 'urbanLikes'));
+  const likesMap = {};
+  snapshot.forEach(docSnap => {
+    const idNum = parseInt(docSnap.id, 10);
+    likesMap[idNum] = docSnap.data().count || 0;
+  });
+  return likesMap;
+}
+
 function renderUrbanDetail(id) {
   const urbanList = document.getElementById('urbanList');
   const data = urbanData.find(item => item.id === id);
@@ -193,10 +200,8 @@ function renderUrbanDetail(id) {
   const titleElem = document.querySelector('.urban-title');
   if (titleElem) titleElem.textContent = data.title;
 
-  // 상세 뷰 HTML + 오디오 버튼 & <audio> 태그 포함
   urbanList.innerHTML = `
     <div class="product-card urban-item urban-detail" style="width:100%;max-width:1200px;margin:0 auto; position: relative;">
-      <!-- 음성 모드 버튼 -->
       <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
         <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
           🎧 음성 모드
@@ -232,19 +237,15 @@ function renderUrbanDetail(id) {
     </div>
   `;
 
-  // “목록으로” 클릭 시 뒤로가기
   document.querySelector('.urban-back-btn').addEventListener('click', () => {
     window.history.back();
   });
 
-  // 좋아요·댓글 기능 초기화
   setupLikeButton(id);
   setupCommentSection(id);
 
-  // —— 오디오 기능 로직 —— //
   const playBtn = document.getElementById('playVoiceBtn');
   const audioEl = document.getElementById('urbanVoiceAudio');
-  // localStorage에 저장된 상태 불러오기 (on/off)
   let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
 
   function updateVoiceState(play) {
@@ -262,10 +263,7 @@ function renderUrbanDetail(id) {
     }
   }
 
-  // 상세 진입 시 저장된 상태로 초기값 반영
   updateVoiceState(voicePlaying);
-
-  // 버튼 클릭 시 토글
   playBtn.addEventListener('click', () => {
     voicePlaying = !voicePlaying;
     updateVoiceState(voicePlaying);
@@ -281,10 +279,8 @@ const filterTitles = {
 };
 
 export const urbanData = [
-  {
-    id: 1,
+  id: 1,
     title: '층간소음',
-    likes: 13,
     date: '2025-05-20',
     filter: 'korea',
     level: 4,
@@ -368,7 +364,6 @@ export const urbanData = [
   {
     id: 2,
     title: '하나코야 놀자',
-    likes: 25,
     date: '2025-05-18',
     filter: 'foreign',
     level: 4,
@@ -454,7 +449,6 @@ export const urbanData = [
   {
     id: 3,
     title: '장충동 목욕탕 살인사건',
-    likes: 9,
     date: '2025-05-21',
     filter: 'true',
     level: 5,
@@ -465,7 +459,6 @@ export const urbanData = [
   {
     id: 4,
     title: '졸음운전',
-    likes: 18,
     date: '2025-05-19',
     filter: 'user',
     level: 1,
@@ -474,16 +467,22 @@ export const urbanData = [
     detail: `어릴 적 시골집에서 혼자 잠을 자는데 누군가 이불을 잡아당기는 느낌이 들었습니다. 눈을 떠보니 아무도 없었고, 이불은 그대로였습니다. [...]`
   }
 ];
+];
 
-function renderUrbanList(sortType, filterType) {
+async function renderUrbanList(sortType, filterType) {
   let list = [...urbanData];
   if (filterType && filterType !== 'all') {
     list = list.filter(item => item.filter === filterType);
   }
+
+  // Firebase에서 좋아요 개수 가져오기
+  const likesMap = await fetchAllLikes();
+
+  // 정렬 로직 수정: 인기순은 likesMap 기준으로 정렬
   if (sortType === 'latest') {
     list.sort((a, b) => b.date.localeCompare(a.date));
   } else if (sortType === 'popular') {
-    list.sort((a, b) => b.likes - a.likes);
+    list.sort((a, b) => (likesMap[b.id] || 0) - (likesMap[a.id] || 0));
   } else if (sortType === 'level') {
     list.sort((a, b) => b.level - a.level);
   }
@@ -494,10 +493,12 @@ function renderUrbanList(sortType, filterType) {
       <img src="${item.thumb}" alt="${item.title}">
       <div class="urban-item-title" style="margin-bottom:0.5rem;">${item.title}</div>
       <div class="urban-item-meta" style="margin-bottom:0.4rem;">
-        <span>좋아요 ${item.likes}개</span>
+        <span>❤️ 좋아요 ${likesMap[item.id] || 0}개</span>
         <span>${item.date}</span>
       </div>
-      <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
+      <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">
+        공포 난이도: ${renderLevelStars(item.level)}
+      </div>
     </div>
   `).join('');
 
@@ -510,7 +511,7 @@ function renderUrbanList(sortType, filterType) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('urbanList')) {
     let sortType = 'latest';
     let filterType = getParamFromURL('filter') || 'all';
@@ -519,16 +520,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (idParam) {
       renderUrbanDetail(parseInt(idParam, 10));
     } else {
-      renderUrbanList(sortType, filterType);
+      await renderUrbanList(sortType, filterType);
       updateUrbanTitle(filterType);
     }
 
     document.querySelectorAll('.sort-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', async function () {
         document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         sortType = this.dataset.sort;
-        renderUrbanList(sortType, filterType);
+        await renderUrbanList(sortType, filterType);
         updateUrbanTitle(filterType);
       });
     });
@@ -536,25 +537,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const urbanMenu = document.getElementById('urbanMenu');
     if (urbanMenu) {
       urbanMenu.querySelectorAll('.submenu a').forEach(link => {
-        link.addEventListener('click', function (e) {
+        link.addEventListener('click', async function (e) {
           e.preventDefault();
           const url = new URL(this.href);
-          const newFilter = url.searchParams.get('filter') || 'all';
-          filterType = newFilter;
+          filterType = url.searchParams.get('filter') || 'all';
           window.history.pushState({}, '', url.pathname + url.search);
-          renderUrbanList(sortType, filterType);
+          await renderUrbanList(sortType, filterType);
           updateUrbanTitle(filterType);
         });
       });
     }
 
-    window.addEventListener('popstate', function () {
+    window.addEventListener('popstate', async () => {
       const idParam = getParamFromURL('id');
       filterType = getParamFromURL('filter') || 'all';
       if (idParam) {
         renderUrbanDetail(parseInt(idParam, 10));
       } else {
-        renderUrbanList(sortType, filterType);
+        await renderUrbanList(sortType, filterType);
         updateUrbanTitle(filterType);
       }
     });
