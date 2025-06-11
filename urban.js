@@ -52,6 +52,7 @@ function renderLevelStars(level) {
 function setupLikeButton(postId) {
   const likeBtn = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
+  const item = urbanData.find(item => item.id === postId);
 
   if (!likeBtn || !likeCount) return;
 
