@@ -77,7 +77,6 @@ function setupLikeButton(postId) {
 
       data.count = (data.count || 0) + 1;
       data.users = [...(data.users || []), uid];
-      item.likes++;
       await setDoc(postRef, data);
       likeCount.textContent = data.count;
     });
