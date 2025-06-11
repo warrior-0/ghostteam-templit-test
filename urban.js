@@ -1,4 +1,3 @@
-
 // ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가) + 오디오 기능
 
 import {
@@ -60,12 +59,7 @@ function setupLikeButton(postId) {
 
   getDoc(postRef).then(docSnap => {
     const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
-    // ① 첫 로드시 Firestore 카운트를 dummyData로 초기화
-    const story = urbanData.find(item => item.id === postId);
-    if (story) {
-      story.likes = data.count || 0;
-      likeCount.textContent = story.likes;
-    }
+    likeCount.textContent = data.count || 0;
 
     likeBtn.addEventListener('click', async () => {
       if (!currentUser) {
@@ -80,12 +74,11 @@ function setupLikeButton(postId) {
         return;
       }
 
-      // ② 클릭 시 dummyData.likes 먼저 증가시키고 Firestore에도 동기화
-      story.likes++;
-      data.count = story.likes;
-      data.users.push(uid);
+      data.count = (data.count || 0) + 1;
+      data.users = [...(data.users || []), uid];
+
       await setDoc(postRef, data);
-      likeCount.textContent = story.likes;
+      likeCount.textContent = data.count;
     });
   });
 }
@@ -291,7 +284,7 @@ export const urbanData = [
   {
     id: 1,
     title: '층간소음',
-    likes: 1000,
+    likes: 13,
     date: '2025-05-20',
     filter: 'korea',
     level: 4,
@@ -375,7 +368,7 @@ export const urbanData = [
   {
     id: 2,
     title: '하나코야 놀자',
-    likes: 100,
+    likes: 25,
     date: '2025-05-18',
     filter: 'foreign',
     level: 4,
@@ -461,7 +454,7 @@ export const urbanData = [
   {
     id: 3,
     title: '장충동 목욕탕 살인사건',
-    likes: 0,
+    likes: 9,
     date: '2025-05-21',
     filter: 'true',
     level: 5,
@@ -472,7 +465,7 @@ export const urbanData = [
   {
     id: 4,
     title: '졸음운전',
-    likes: 0,
+    likes: 18,
     date: '2025-05-19',
     filter: 'user',
     level: 1,
