@@ -96,37 +96,33 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-      // 좋아요 버튼 로직
-      const likeButton = document.getElementById("likeButton");
-      let userHasLiked = false;
+     async function setupLikeButton(postId) {
+  const likeBtn = document.getElementById('likeBtn');
+  const likeCount = document.getElementById('likeCount');
+  if (!likeBtn || !likeCount) return;
 
-      async function checkUserLike() {
-        if (!currentUser) return;
-        const likeQ = query(
-          collection(db, "likes"),
-          where("postId", "==", postId),
-          where("uid", "==", currentUser.uid)
-        );
-        const likeSnap = await getDocs(likeQ);
-        if (!likeSnap.empty) {
-          userHasLiked = true;
-          likeButton.disabled = true;
-          likeButton.textContent = "❤️ 이미 좋아요";
-        }
+  const postRef = doc(db, 'urbanLikes', String(postId));
+  getDoc(postRef).then(docSnap => {
+    const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
+    likeCount.textContent = data.count || 0;
+
+    likeBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        alert('로그인이 필요합니다');
+        return;
       }
-
-      if (currentUser) checkUserLike();
-
-      likeButton.addEventListener("click", async () => {
-        if (!currentUser) return alert("로그인이 필요합니다.");
-        if (userHasLiked) return;
-        await addDoc(collection(db, "likes"), { postId, uid: currentUser.uid });
-        await updateDoc(doc(db, "communityPosts", postId), { likes: increment(1) });
-        data.likes++;
-        userHasLiked = true;
-        likeButton.disabled = true;
-        likeButton.textContent = "❤️ 이미 좋아요";
-      });
+      const uid = currentUser.uid;
+      if (data.users?.includes(uid)) {
+        alert('이미 좋아요를 누르셨습니다');
+        return;
+      }
+      data.count = (data.count || 0) + 1;
+      data.users = [...(data.users || []), uid];
+      await setDoc(postRef, data);
+      likeCount.textContent = data.count;
+    });
+  });
+}
 
       // 댓글 로드/관리 함수
       async function loadComments() {
