@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const audioEl = document.createElement('audio');
     audioEl.id = 'bgmAudio';
     audioEl.loop = true;
-    audioEl.innerHTML = `<source src="audio/bgm.mp3" type="audio/mpeg">브라우저가 오디오를 지원하지 않습니다.`;
+    audioEl.innerHTML = `<source src="audio/audio/bgm.mp3" type="audio/mpeg">브라우저가 오디오를 지원하지 않습니다.`;
     document.body.appendChild(audioEl);
   }
 
