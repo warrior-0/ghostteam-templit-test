@@ -291,7 +291,7 @@ export const urbanData = [
   {
     id: 1,
     title: '층간소음',
-    likes: 0,
+    likes: 1000,
     date: '2025-05-20',
     filter: 'korea',
     level: 4,
