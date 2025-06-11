@@ -1,18 +1,20 @@
-// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 (댓글 예외처리 추가) + 오디오 기능
+// ✅ urban.js: 괴담 목록, 상세보기, 좋아요 및 댓글 기능 포함 + Firebase 유저 닉네임 반영 + 댓글 수정/삭제 기능 개선 + 오디오 기능
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-  getFirestore, doc, getDoc, updateDoc,
-  collection, addDoc, getDocs, deleteDoc, setDoc
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  setDoc,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAjHwHbHlCi4vgv-Ma0-3kqt-M3SLI_oF4",
@@ -29,8 +31,14 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let currentUser = null;
+let currentPostId = null;
+
 onAuthStateChanged(auth, user => {
   currentUser = user;
+  // 인증 상태 변경 시, 댓글 목록을 다시 불러와서 편집/삭제 버튼 표시 갱신
+  if (currentPostId !== null) {
+    loadComments(currentPostId);
+  }
 });
 
 function getParamFromURL(name) {
@@ -52,31 +60,24 @@ function renderLevelStars(level) {
 function setupLikeButton(postId) {
   const likeBtn = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
-
   if (!likeBtn || !likeCount) return;
 
   const postRef = doc(db, 'urbanLikes', String(postId));
-
   getDoc(postRef).then(docSnap => {
     const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
     likeCount.textContent = data.count || 0;
-
     likeBtn.addEventListener('click', async () => {
       if (!currentUser) {
         alert('로그인이 필요합니다');
         return;
       }
       const uid = currentUser.uid;
-      const alreadyLiked = data.users?.includes(uid);
-
-      if (alreadyLiked) {
+      if (data.users?.includes(uid)) {
         alert('이미 좋아요를 누르셨습니다');
         return;
       }
-
       data.count = (data.count || 0) + 1;
       data.users = [...(data.users || []), uid];
-
       await setDoc(postRef, data);
       likeCount.textContent = data.count;
     });
@@ -87,8 +88,7 @@ async function getUserNickname(uid) {
   try {
     const userDoc = await getDoc(doc(db, 'users', uid));
     if (userDoc.exists()) {
-      const data = userDoc.data();
-      return data.nickname || '익명';
+      return userDoc.data().nickname || '익명';
     }
   } catch (err) {
     console.warn('닉네임 조회 실패:', err);
@@ -96,26 +96,26 @@ async function getUserNickname(uid) {
   return '익명';
 }
 
+// 댓글 로드 및 편집/삭제 기능
 async function loadComments(postId) {
   const commentList = document.getElementById('commentList');
+  if (!commentList) return;
   commentList.innerHTML = '';
-  const q = collection(db, 'urbanComments');
-  const snapshot = await getDocs(q);
-  const filtered = [];
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.postId === postId) {
-      filtered.push({ id: docSnap.id, ...data });
-    }
-  });
 
-  filtered.sort((a, b) => b.timestamp - a.timestamp);
-  filtered.forEach(comment => {
+  const q = query(
+    collection(db, 'urbanComments'),
+    where('postId', '==', postId)
+  );
+  const snapshot = await getDocs(q);
+  const comments = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+  comments.sort((a, b) => b.timestamp - a.timestamp);
+
+  comments.forEach(comment => {
     const div = document.createElement('div');
     div.className = 'comment-item';
     div.innerHTML = `
       <div><strong>${comment.nickname || '익명'}:</strong> <span>${comment.text}</span></div>
-      ${currentUser?.uid === comment.uid ? `
+      ${currentUser && currentUser.uid === comment.uid ? `
         <button data-id="${comment.id}" class="editBtn">수정</button>
         <button data-id="${comment.id}" class="deleteBtn">삭제</button>
       ` : ''}
@@ -123,6 +123,7 @@ async function loadComments(postId) {
     commentList.appendChild(div);
   });
 
+  // 편집 버튼 이벤트
   commentList.querySelectorAll('.editBtn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
@@ -133,11 +134,11 @@ async function loadComments(postId) {
       }
     });
   });
-
+  // 삭제 버튼 이벤트
   commentList.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
-      if (confirm('삭제하시겠습니까?')) {
+      if (confirm('댓글을 삭제하시겠습니까?')) {
         await deleteDoc(doc(db, 'urbanComments', id));
         loadComments(postId);
       }
@@ -146,6 +147,7 @@ async function loadComments(postId) {
 }
 
 function setupCommentSection(postId) {
+  currentPostId = postId;
   const form = document.getElementById('commentForm');
   const input = document.getElementById('commentInput');
   if (!form || !input) return;
@@ -174,7 +176,6 @@ function setupCommentSection(postId) {
         text,
         timestamp: Date.now()
       });
-
       input.value = '';
       loadComments(postId);
     } catch (e) {
@@ -183,6 +184,7 @@ function setupCommentSection(postId) {
     }
   });
 
+  // 초기 댓글 로드
   loadComments(postId);
 }
 
@@ -190,13 +192,10 @@ function renderUrbanDetail(id) {
   const urbanList = document.getElementById('urbanList');
   const data = urbanData.find(item => item.id === id);
   if (!data) return;
-  const titleElem = document.querySelector('.urban-title');
-  if (titleElem) titleElem.textContent = data.title;
+  updateUrbanTitle(data.title);
 
-  // 상세 뷰 HTML + 오디오 버튼 & <audio> 태그 포함
   urbanList.innerHTML = `
     <div class="product-card urban-item urban-detail" style="width:100%;max-width:1200px;margin:0 auto; position: relative;">
-      <!-- 음성 모드 버튼 -->
       <div class="voice-mode" style="position:absolute; top:1rem; right:1rem;">
         <button id="playVoiceBtn" style="background:#444; color:#fff; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer;">
           🎧 음성 모드
@@ -206,12 +205,11 @@ function renderUrbanDetail(id) {
           브라우저가 오디오를 지원하지 않습니다.
         </audio>
       </div>
-
       <div class="urban-item-title" style="font-size:1.5rem;margin-bottom:0.6rem;">${data.title}</div>
-      <div class="urban-item-meta">
-        <span>${data.date}</span>
+      <div class="urban-item-meta"><span>${data.date}</span></div>
+      <div style="color:#e01c1c;font-size:1rem;margin-bottom:0.8rem;">
+        공포 난이도: ${renderLevelStars(data.level)}
       </div>
-      <div style="color:#e01c1c;font-size:1rem;margin-bottom:0.8rem;">공포 난이도: ${renderLevelStars(data.level)}</div>
       <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">${data.detail}</div>
 
       <div class="like-section" style="margin-top: 1rem;">
@@ -232,19 +230,13 @@ function renderUrbanDetail(id) {
     </div>
   `;
 
-  // “목록으로” 클릭 시 뒤로가기
-  document.querySelector('.urban-back-btn').addEventListener('click', () => {
-    window.history.back();
-  });
-
-  // 좋아요·댓글 기능 초기화
+  document.querySelector('.urban-back-btn').addEventListener('click', () => window.history.back());
   setupLikeButton(id);
   setupCommentSection(id);
 
-  // —— 오디오 기능 로직 —— //
+  // 오디오 토글 기능
   const playBtn = document.getElementById('playVoiceBtn');
   const audioEl = document.getElementById('urbanVoiceAudio');
-  // localStorage에 저장된 상태 불러오기 (on/off)
   let voicePlaying = localStorage.getItem('voiceModeStatus') === 'on';
 
   function updateVoiceState(play) {
@@ -262,10 +254,7 @@ function renderUrbanDetail(id) {
     }
   }
 
-  // 상세 진입 시 저장된 상태로 초기값 반영
   updateVoiceState(voicePlaying);
-
-  // 버튼 클릭 시 토글
   playBtn.addEventListener('click', () => {
     voicePlaying = !voicePlaying;
     updateVoiceState(voicePlaying);
