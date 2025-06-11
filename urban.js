@@ -60,7 +60,12 @@ function setupLikeButton(postId) {
 
   getDoc(postRef).then(docSnap => {
     const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
-    likeCount.textContent = data.count || 0;
+    // ① 첫 로드시 Firestore 카운트를 dummyData로 초기화
+    const story = urbanData.find(item => item.id === postId);
+    if (story) {
+      story.likes = data.count || 0;
+      likeCount.textContent = story.likes;
+    }
 
     likeBtn.addEventListener('click', async () => {
       if (!currentUser) {
@@ -75,15 +80,12 @@ function setupLikeButton(postId) {
         return;
       }
 
-      data.count = (data.count || 0) + 1;
-      data.users = [...(data.users || []), uid];
-      
-      const story = urbanData.find(item => item.id === postId);
-      if (story) {
-        story.likes = (story.likes || 0) + 1;
-      }
+      // ② 클릭 시 dummyData.likes 먼저 증가시키고 Firestore에도 동기화
+      story.likes++;
+      data.count = story.likes;
+      data.users.push(uid);
       await setDoc(postRef, data);
-      likeCount.textContent = data.count;
+      likeCount.textContent = story.likes;
     });
   });
 }
