@@ -34,8 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   onAuthStateChanged(auth, user => {
     currentUser = user;
-    if (postId && currentUser) setupLikeButton(postId);
-    if (postId && currentUser) loadComments();
+    if (postId && currentUser) {
+      setupLikeButton(postId);
+      loadComments();
+    }
   });
 
   // ─── 2. URL 파라미터 헬퍼 ───────────────────────────────────────────────────────────
@@ -68,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     [boardSelectorSection, showWriteFormBtn, writeForm, communityHeader, communityList]
       .forEach(el => el && (el.style.display = "none"));
 
-    getDoc(doc(db, "communityPosts", postId)).then(async snap => {
+    getDoc(doc(db, "communityPosts", postId)).then(snap => {
       if (!snap.exists()) {
         postDetailContainer.innerHTML = "<p>게시글을 찾을 수 없습니다.</p>";
         return;
@@ -122,52 +124,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const summary = document.getElementById("writeBody").value.trim();
     const detail = document.getElementById("postDetailInput").value.trim();
     const board = document.getElementById("writeBoard").value;
-    if (!title||!summary||!detail) return alert("모든 필드를 입력해주세요.");
+    if (!title || !summary || !detail) return alert("모든 필드를 입력해주세요.");
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    const nickname = userDoc.exists() ? userDoc.data().nickname||"익명" : "익명";
-    const date = new Date().toISOString().slice(0,10);
-    await addDoc(collection(db, "communityPosts"), { title, summary, detail, board, date, likes:0, nickname, uid: currentUser.uid });
+    const nickname = userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
+    const date = new Date().toISOString().slice(0, 10);
+    await addDoc(collection(db, "communityPosts"), { title, summary, detail, board, date, likes: 0, nickname, uid: currentUser.uid });
     alert("게시글이 등록되었습니다.");
     location.href = `community.html?board=${board}`;
   });
 
-  async function loadPosts(board, sort="latest") {
+  // ─── 7. 게시글 목록 로드 ─────────────────────────────────────────────────────────
+  async function loadPosts(board, sort = "latest") {
     communityList.innerHTML = "";
-    const q = query(collection(db, "communityPosts"), where("board","==",board));
+    const q = query(collection(db, "communityPosts"), where("board", "==", board));
     const snap = await getDocs(q);
-    let posts = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    posts.sort((a,b)=>(sort==='popular'?b.likes-a.likes:new Date(b.date)-new Date(a.date)));
+    let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    posts.sort((a, b) => (sort === 'popular' ? b.likes - a.likes : new Date(b.date) - new Date(a.date)));
     if (!posts.length) return communityList.innerHTML = "<p>게시글이 없습니다.</p>";
-    posts.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="post-item";
-      div.innerHTML=`<h3><a href="community.html?id=${p.id}&board=${board}">${p.title}</a></h3>
+    posts.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "post-item";
+      div.innerHTML = `
+        <h3><a href="community.html?id=${p.id}&board=${board}">${p.title}</a></h3>
         <p>${p.summary}</p>
-        <div class="meta">${p.date} | ${p.nickname} | ❤️ ${p.likes}</div>`;
+        <div class="meta">${p.date} | ${p.nickname} | ❤️ ${p.likes}</div>
+      `;
       communityList.appendChild(div);
     });
   }
 
   let currentSort = "latest";
-  sortButtons.forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      sortButtons.forEach(b=>b.classList.remove("active"));
+  sortButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      sortButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentSort = btn.dataset.sort;
-      loadPosts(boardParam,currentSort);
+      loadPosts(boardParam, currentSort);
     });
   });
 
   loadPosts(boardParam, currentSort);
 });
 
-// 좋아요 로직 공통 함수
+// ─── 좋아요 로직 공통 함수 ─────────────────────────────────────────────────────────
 function setupLikeButton(postId) {
-  const likeBtn   = document.getElementById('likeBtn');
+  const likeBtn = document.getElementById('likeBtn');
   const likeCount = document.getElementById('likeCount');
   if (!likeBtn || !likeCount) return;
 
-  const postRef = doc(db, 'urbanLikes', String(postId));
+  const postRef = doc(db, 'urbanLikes', String(postId)); // 컬렉션 이름 확인
   getDoc(postRef).then(docSnap => {
     const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
     likeCount.textContent = data.count;
@@ -190,14 +195,14 @@ function setupLikeButton(postId) {
   });
 }
 
-// 댓글 관리 함수
+// ─── 댓글 관리 함수 ─────────────────────────────────────────────────────────────
 async function loadComments() {
   const listEl = document.getElementById("commentList");
   listEl.innerHTML = "";
   const cQ = query(collection(db, "comments"), where("postId", "==", postId));
   const cSnap = await getDocs(cQ);
   const comments = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  comments.sort((a,b) => new Date(a.date) - new Date(b.date));
+  comments.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   if (!comments.length) {
     listEl.innerHTML = "<p>댓글이 없습니다.</p>";
@@ -226,7 +231,8 @@ async function loadComments() {
       });
       btns.querySelector(".editBtn").addEventListener("click", () => {
         const textEl = document.getElementById(`commentText-${c.id}`);
-        const ta = document.createElement("textarea"); ta.value = c.text;  
+        const ta = document.createElement("textarea");
+        ta.value = c.text;
         const save = document.createElement("button"); save.textContent = "저장";
         const cancel = document.createElement("button"); cancel.textContent = "취소";
         textEl.replaceWith(ta);
@@ -246,5 +252,16 @@ async function loadComments() {
   });
 }
 
-// 댓글 작성 핸들러
-```
+// ─── 댓글 작성 핸들러 ─────────────────────────────────────────────────────────
+document.getElementById("addCommentButton").addEventListener("click", async () => {
+  if (!currentUser) return alert("로그인이 필요합니다.");
+  const ta = document.getElementById("commentInput");
+  const text = ta.value.trim();
+  if (!text) return alert("댓글을 입력해주세요.");
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  const nickname = userDoc.exists() ? userDoc.data().nickname || "익명" : "익명";
+  const date = new Date().toISOString().slice(0,10);
+  await addDoc(collection(db, "comments"), { postId, uid: currentUser.uid, nickname, text, date });
+  ta.value = "";
+  loadComments();
+});
