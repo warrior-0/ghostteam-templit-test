@@ -475,11 +475,27 @@ export const urbanData = [
   }
 ];
 
-function renderUrbanList(sortType, filterType) {
-  let list = [...urbanData];
+async function renderUrbanList(sortType, filterType) {
+  // 1) Firestore에서 urbanLikes 컬렉션 읽어오기
+  const likesSnapshot = await getDocs(collection(db, 'urbanLikes'));
+  const firebaseLikes = {};
+  likesSnapshot.forEach(docSnap => {
+    // 문서 ID가 postId (문자열)라고 가정
+    firebaseLikes[docSnap.id] = docSnap.data().count || 0;
+  });
+
+  // 2) urbanData와 병합하여 새 배열 생성
+  let list = urbanData.map(item => ({
+    ...item,
+    likes: firebaseLikes[String(item.id)] ?? 0
+  }));
+
+  // 3) 필터링
   if (filterType && filterType !== 'all') {
     list = list.filter(item => item.filter === filterType);
   }
+
+  // 4) 정렬
   if (sortType === 'latest') {
     list.sort((a, b) => b.date.localeCompare(a.date));
   } else if (sortType === 'popular') {
@@ -488,6 +504,7 @@ function renderUrbanList(sortType, filterType) {
     list.sort((a, b) => b.level - a.level);
   }
 
+  // 5) 렌더링
   const urbanList = document.getElementById('urbanList');
   urbanList.innerHTML = list.map(item => `
     <div class="product-card urban-item" data-id="${item.id}" style="cursor:pointer;">
@@ -497,10 +514,13 @@ function renderUrbanList(sortType, filterType) {
         <span>좋아요 ${item.likes}개</span>
         <span>${item.date}</span>
       </div>
-      <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
+      <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">
+        공포 난이도: ${renderLevelStars(item.level)}
+      </div>
     </div>
   `).join('');
 
+  // 6) 클릭 이벤트 바인딩
   document.querySelectorAll('.urban-item').forEach(itemElem => {
     itemElem.addEventListener('click', function () {
       const clickId = this.getAttribute('data-id');
