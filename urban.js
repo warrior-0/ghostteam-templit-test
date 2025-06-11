@@ -561,20 +561,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ─── 리스트 카드의 좋아요 수를 Firebase에서 덮어쓰기 ──────────────────────────
-async function updateListLikeCounts() {
-  // 1) urbanLikes 컬렉션 전부 읽기
-  const snapshot = await getDocs(collection(db, 'urbanLikes'));
-  const likeCounts = {};
-  snapshot.forEach(docSnap => {
-    likeCounts[docSnap.id] = docSnap.data().count || 0;
-  });
-
-  // 2) 화면에 렌더된 카드들 데이터-id 기준으로 덮어쓰기
-  document.querySelectorAll('.urban-item').forEach(card => {
-    const id = card.dataset.id;
-    const cnt = likeCounts[id] ?? 0; 
-    const span = card.querySelector('.urban-item-meta span');
-    if (span) span.textContent = `좋아요 ${cnt}개`;
-  });
-}
