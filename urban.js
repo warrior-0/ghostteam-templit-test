@@ -494,7 +494,7 @@ function renderUrbanList(sortType, filterType) {
       <img src="${item.thumb}" alt="${item.title}">
       <div class="urban-item-title" style="margin-bottom:0.5rem;">${item.title}</div>
       <div class="urban-item-meta" style="margin-bottom:0.4rem;">
-        <span>좋아요 ${item.likes}개</span>
+        <span>좋아요 <span id="likeCount">0</span>개</span>
         <span>${item.date}</span>
       </div>
       <div style="color:#e01c1c;font-size:0.95rem;margin-bottom:0.2rem;">공포 난이도: ${renderLevelStars(item.level)}</div>
