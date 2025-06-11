@@ -67,18 +67,24 @@ function setupLikeButton(postId) {
         return;
       }
       const uid = currentUser.uid;
-      const alreadyLiked = data.users?.includes(uid);
-
-      if (alreadyLiked) {
+      if (data.users?.includes(uid)) {
         alert('이미 좋아요를 누르셨습니다');
         return;
       }
 
+      // — Firebase 반영
       data.count = (data.count || 0) + 1;
       data.users = [...(data.users || []), uid];
-
       await setDoc(postRef, data);
+
+      // — 화면 갱신
       likeCount.textContent = data.count;
+
+      // — 로컬 urbanData 갱신
+      const localItem = urbanData.find(item => item.id === postId);
+      if (localItem) {
+        localItem.likes = data.count;
+      }
     });
   });
 }
