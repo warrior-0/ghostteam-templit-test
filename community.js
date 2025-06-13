@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ─── 5. 상세보기 모드 ─────────────────────────────────────────────────────────────
   if (postId) {
     // 나머지 UI 숨기기
-    [boardSelectorSection, showWriteFormBtn, writeForm, communityHeader, communityList]
+    [boardSelectorSection, showWriteFormBtn, writeForm, communityHeader, communityList, sortButtons]
       .forEach(el => el && (el.style.display = "none"));
 
     // 게시글 가져와 렌더링
