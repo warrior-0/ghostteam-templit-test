@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     measurementId: "G-B758ZC971V"
   };
 
+  
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
