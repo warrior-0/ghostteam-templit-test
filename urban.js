@@ -263,14 +263,39 @@ document.addEventListener("click", (e) => {
         <button id="likeBtn">❤️ 좋아요</button> <span id="likeCount">0</span>
       </div>
 
-      <div class="comment-section" style="margin-top:2rem;">
-        <form id="commentForm">
-          <input type="text" id="commentInput" placeholder="댓글을 입력하세요" required />
-          <button type="submit">댓글 작성</button>
-        </form>
-        <div id="commentList"></div>
-      </div>
-
+      <div class="comment-section" style="margin-top:2rem; padding:1rem; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+  <form id="commentForm" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+    <input type="text" id="commentInput" placeholder="댓글을 입력하세요" required
+      style="
+        flex-grow:1;
+        padding:0.6rem 1rem;
+        border:1px solid #ddd;
+        border-radius:6px;
+        font-size:1rem;
+        outline:none;
+        transition:border-color 0.2s;
+      "
+      onfocus="this.style.borderColor='#999';"
+      onblur="this.style.borderColor='#ddd';"
+    />
+    <button type="submit" style="
+      background-color:#333;
+      color:#ffffff;
+      border:none;
+      padding:0.6rem 1rem;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:1rem;
+      transition:background-color 0.2s, transform 0.1s;
+    "
+    onmouseover="this.style.backgroundColor='#555';"
+    onmouseout="this.style.backgroundColor='#333';"
+    onmousedown="this.style.transform='scale(0.95)';"
+    onmouseup="this.style.transform='scale(1)';"
+    >댓글 작성</button>
+  </form>
+  <div id="commentList"></div>
+</div>
       <button class="urban-back-btn" style="margin-top:2rem; background:#222;color:#fafafa;border:none;padding:0.7rem 1.6rem;border-radius:8px;cursor:pointer;">
         목록으로
       </button>
