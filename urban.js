@@ -213,10 +213,7 @@ function renderUrbanDetail(id) {
       <div class="urban-item-body" style="margin-top:1.2rem; font-size:1.1rem; line-height:1.7;">${data.detail}</div>
 
       <div class="like-section" style="margin-top: 1rem;">
-        <button id="likeBtn"
-          style="background-color: #e01c1c; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: transform 0.1s ease, background-color 0.2s ease;">
-        ❤️ 좋아요
-       </button>
+        <button id="likeBtn" class="like-button">❤️ 좋아요</button>
       <span id="likeCount">0</span>
      </div>
 
