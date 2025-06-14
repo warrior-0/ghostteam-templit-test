@@ -110,6 +110,36 @@ document.addEventListener("DOMContentLoaded", () => {
       const likeButton = document.getElementById("likeButton");
       let userHasLiked = false;
 
+      // 좋아요 버튼 스타일 추가
+Object.assign(likeButton.style, {
+  backgroundColor: '#e01c1c',
+  color: '#ffffff',
+  border: 'none',
+  padding: '0.6rem 1.2rem',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '1rem',
+  boxShadow: '0 3px 6px rgba(0,0,0,0.15)',
+  transition: 'transform 0.1s ease, background-color 0.2s ease'
+});
+
+likeButton.addEventListener('mouseenter', () => {
+  likeButton.style.backgroundColor = '#c41818';
+});
+
+likeButton.addEventListener('mouseleave', () => {
+  likeButton.style.backgroundColor = '#e01c1c';
+  likeButton.style.transform = 'scale(1)';
+});
+
+likeButton.addEventListener('mousedown', () => {
+  likeButton.style.transform = 'scale(0.95)';
+});
+
+likeButton.addEventListener('mouseup', () => {
+  likeButton.style.transform = 'scale(1)';
+});
+      
       async function checkUserLike() {
         if (!currentUser) return;
         const likeQ = query(
