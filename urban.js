@@ -62,6 +62,32 @@ function setupLikeButton(postId) {
   const likeCount = document.getElementById('likeCount');
   if (!likeBtn || !likeCount) return;
 
+  likeBtn.style.backgroundColor = '#e01c1c';
+  likeBtn.style.color = '#ffffff';
+  likeBtn.style.border = 'none';
+  likeBtn.style.padding = '0.5rem 1rem';
+  likeBtn.style.borderRadius = '6px';
+  likeBtn.style.cursor = 'pointer';
+  likeBtn.style.fontSize = '1rem';
+  likeBtn.style.transition = 'transform 0.1s ease, background-color 0.2s ease';
+
+  // hover 및 active 효과는 JS 이벤트로 처리
+  likeBtn.addEventListener('mouseenter', () => {
+    likeBtn.style.backgroundColor = '#c41818';
+  });
+
+  likeBtn.addEventListener('mouseleave', () => {
+    likeBtn.style.backgroundColor = '#e01c1c';
+  });
+
+  likeBtn.addEventListener('mousedown', () => {
+    likeBtn.style.transform = 'scale(0.95)';
+  });
+
+  likeBtn.addEventListener('mouseup', () => {
+    likeBtn.style.transform = 'scale(1)';
+  });
+}
   const postRef = doc(db, 'urbanLikes', String(postId));
   getDoc(postRef).then(docSnap => {
     const data = docSnap.exists() ? docSnap.data() : { count: 0, users: [] };
