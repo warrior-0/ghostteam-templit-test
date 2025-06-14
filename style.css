@@ -1,19 +1,3 @@
-.like-button {
-  background-color: #e01c1c;
-  color: #ffffff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: transform 0.1s ease, background-color 0.2s ease;
-}
-
-.like-button:hover {
-  transform: scale(1.05);
-  background-color: #c91717;
-}
-
 body {
   margin: 0;
   font-family: 'Noto Sans KR', Arial, sans-serif;
@@ -185,30 +169,30 @@ nav {
 .product-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 2.2rem 2.2rem;
+  gap: 2rem 2rem;
   flex: 1;
   justify-content: flex-start;
 }
 .product-card.urban-item {
+  width: 280px;
+  min-height: 320px;
   background: #181818;
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-  padding: 0.8rem 0.8rem 1.1rem 0.8rem;
-  width: 210px;
-  min-height: 220px;
+  padding: 1rem;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  transition: box-shadow 0.2s;
-  margin: 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
+
 .product-card.urban-item img {
   width: 100%;
-  height: 115px;
+  height: 280px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
 }
+
 .urban-item-title {
   font-size: 1.02rem;
   color: #e01c1c;
@@ -232,47 +216,47 @@ nav {
   cursor: default !important;
 }
 
-/* ------ 홈 인기 괴담 슬라이더 ------ */
-.product-slider-wrapper {
-  width: 650px;
-  overflow: hidden;
-  position: relative;
-  margin: 0 0.5rem;
-}
-.product-slider {
-  display: flex;
-  gap: 2rem;
-  transition: transform 0.4s cubic-bezier(.4,1.3,.45,.93);
-}
-.product-slider .product-card {
-  flex: 0 0 240px;
-  width: 240px;
-  min-width: 240px;
-  max-width: 240px;
-  background: #181818;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-  padding: 1rem 1rem 1.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.product-slider .product-card img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-.product-slider .product-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
 /* 마우스오버 시 */
 .product-slider .product-card:hover {
   transform: translateY(-8px); /* 살짝 위로 뜨는 효과 */
   box-shadow: 0 10px 20px rgba(0,0,0,0.4); /* 진한 그림자 */
   z-index: 5;
+}
+
+/* 클릭 힌트 스타일 */
+.click-hint {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 0.3rem;
+  animation: blink 1.2s infinite alternate;
+}
+
+@keyframes blink {
+  from { opacity: 1; }
+  to   { opacity: 0.4; }
+}
+
+.story-content {
+  font-family: 'Noto Serif KR', serif; /* 공포 분위기에 어울리는 서체 */
+  font-size: 1.1rem;
+  line-height: 1.85;
+  color: #f0f0f0;
+  background-color: #111;  /* 어두운 배경 */
+  padding: 2rem;
+  border-radius: 1rem;
+  white-space: pre-line; /* 줄바꿈 유지 */
+  letter-spacing: 0.03em;
+  box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.1);
+  transition: background 0.3s ease;
+}
+
+.story-content:hover {
+  background-color: #181818;
 }
 
 /* ------ community(커뮤니티) ------ */
@@ -288,11 +272,11 @@ nav {
   color: #fafafa;
   letter-spacing: 1px;
 }
-.community-sort {
+.sort-buttons {
   display: flex;
   gap: 1rem;
 }
-.community-sort button {
+.sort-buttons button {
   background: #222;
   color: #fafafa;
   border: none;
@@ -302,7 +286,7 @@ nav {
   font-size: 1rem;
   transition: background 0.18s, color 0.18s;
 }
-.community-sort button.active, .community-sort button:hover {
+.sort-buttons button.active, .sort-buttons button:hover {
   background: #e01c1c;
   color: #fff;
 }
@@ -339,6 +323,260 @@ nav {
 .community-detail {
   cursor: default !important;
 }
+
+/*글쓰기 버튼 디자인*/
+.board-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sort-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.write-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 100px;
+}
+
+.write-btn {
+  background: #e01c1c;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.write-btn:hover {
+  background: #a81414;
+}
+
+/*글쓰기 폼 스타일*/
+#writeForm {
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+#writeForm input,
+#writeForm select,
+#writeForm textarea {
+  background: #111;
+  color: #fafafa;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 95%;
+}
+
+#writeForm input:focus,
+#writeForm select:focus,
+#writeForm textarea:focus {
+  border-color: #e01c1c;
+  box-shadow: 0 0 0 2px rgba(224, 28, 28, 0.3);
+}
+
+#writeForm textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+/* 버튼 디자인 - 작게 */
+.submit-btn {
+  background: #e01c1c;
+  color: white;
+  border: none;
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-end;
+}
+
+.submit-btn:hover {
+  background: #a81414;
+}
+
+/*about.html 디자인*/
+/* 사이트 소개 페이지 공통 */
+.site-intro {
+  color: #f1f1f1;
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.intro-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.intro-hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.intro-hero p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+/* 소개 섹션 */
+.intro-about h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+.intro-about p {
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* 기능 리스트 */
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+}
+.features-list li {
+  background: #2a2a2a;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+.feature-image {
+  display: block;
+  width: 100%;
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0.4rem;
+  margin-bottom: 1rem;
+}
+.feature-image[data-img] {
+  background-image: attr(data-img url);
+}
+.features-list strong {
+  color: #e74c3c;
+}
+.features-list em {
+  color: #ccc;
+}
+
+/* CTA 섹션 */
+.intro-cta {
+  text-align: center;
+  margin-top: 3rem;
+}
+.intro-cta h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.intro-cta p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+.btn {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  font-size: 1rem;
+  border-radius: 0.4rem;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary {
+  background: #e74c3c;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #c0392b;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+/*login.html 디자인*/
+/* ── authSection 전체 레이아웃 ── */
+#authSection {
+  max-width: 360px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #2a2a2a;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;            /* 요소 간 세로 간격 */
+}
+
+/* ── 입력창 ── */
+#authSection input {
+  width: 90%;
+  padding: 0.8rem 1rem;
+  background: #444;
+  border: 1px solid #555;
+  border-radius: 0.4rem;
+  color: #f1f1f1;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+#authSection input:focus {
+  outline: none;
+  border-color: #e74c3c;
+}
+
+/* ── 버튼 그룹 ── */
+.button-group {
+  display: flex;
+  gap: 1rem;              /* 버튼 사이 간격 */
+}
+.button-group button {
+  flex: 1;                /* 동일한 너비 */
+}
+
+/* ── 버튼 공통 스타일 ── */
+#authSection button {
+  padding: 0.8rem 1rem;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+#authSection button:hover {
+  background: #c0392b;
+}
+#authSection button:active {
+  transform: scale(0.97);
+}
+
+/* ── 로그아웃 버튼 완전 숨김 ── */
+#authSection button[style*="display:none"] {
+  display: none !important;
+}
+
 
 /* ------ 홈(main-section, slider 등) ------ */
 .main-section {
@@ -393,7 +631,7 @@ nav {
 
 .product-slider .product-card img {
   width: 100%;
-  height: 180px;
+  height: 220px;
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -518,7 +756,7 @@ footer {
 }
 
 .hero-section {
-  background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+  background: url('image/hero.webp') center/cover no-repeat;
   color: #fff;
   padding: 7rem 2rem;
   text-align: center;
@@ -603,7 +841,7 @@ footer {
 .detail-card {
   /* 화면 가로 100%에서 좌우 패딩을 주어 텍스트가 너무 붙어 보이지 않게 함 */
   width: 100%;
-  max-width: 1200px;    /* 최대 너비를 1200px로 제한 */
+  max-width: 1800px;    /* 최대 너비를 1200px로 제한 */
   margin: 2rem auto;    /* 상하 2rem 여백, 좌우 자동 중앙 정렬 */
   background: #1a1a1a;  /* 카드 배경을 기존보다 조금 더 진하게 */
   border-radius: 12px;  /* 둥근 모서리 */
@@ -712,3 +950,38 @@ footer {
 /* ────────────────────────────────────────────────────────────────────────── */
 /* 만약 상세 화면 진입 시 “흰색 제목(.urban-title)”을 보이지 않게 하고 싶다면 아래 주석을 해제하세요. */
 /* .urban-title { display: none; } */
+
+
+
+
+
+.fullscreen-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 1000px;
+  height: 60vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 4px solid #e01c1c;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+  background-color: black;
+  z-index: 9999;
+}
+
+.fullscreen-popup.shake {
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  20% { transform: translate(-48%, -52%) rotate(1deg); }
+  40% { transform: translate(-52%, -48%) rotate(-1deg); }
+  60% { transform: translate(-50%, -50%) rotate(0.5deg); }
+  80% { transform: translate(-51%, -49%) rotate(-0.5deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
