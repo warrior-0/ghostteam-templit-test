@@ -691,6 +691,24 @@ footer {
   background: #333;
 }
 
+#likeBtn {
+  background-color: #e01c1c;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+#likeBtn:hover {
+  background-color: #c41818;
+}
+
+#likeBtn:active {
+  transform: scale(0.95);
+}
 /* ────────────────────────────────────────────────────────────────────────── */
 /* 11) 상단 흰색 제목(.urban-title) 처리 (선택 사항)                         */
 /* ────────────────────────────────────────────────────────────────────────── */
